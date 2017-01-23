@@ -5,6 +5,8 @@ use self::uuid::Uuid;
 
 use std::io::prelude::*;
 use std::fs::File;
+use std::net::TcpStream;
+
 
 #[derive(Debug)]
 pub struct Client {
@@ -31,21 +33,37 @@ impl Client {
         c
     }
 
-    pub fn load (path: &str) -> Option<Client> {
+    pub fn load_file (path: &str) -> Option<Client> {
         let f = File::open(path);
         if let Ok(mut f) = f {
-            let mut key = [0u8;20];
-            let mut id = [0u8;16];
-            if let Ok(_) = f.read_exact(&mut key) {
-                if let Ok(_) = f.read_exact(&mut id) {
-                    if let Ok(id) = Uuid::from_bytes(&id) {
-                        return Some(Client { id:id, key: key })
-                    }
+            return Client::load(&mut f)
+        }
+
+        None
+    }
+
+    pub fn load<S:Read> (s: &mut S) -> Option<Client> {
+        let mut key = [0u8;20];
+        let mut id = [0u8;16];
+        if let Ok(_) = s.read_exact(&mut key) {
+            if let Ok(_) = s.read_exact(&mut id) {
+                if let Ok(id) = Uuid::from_bytes(&id) {
+                    return Some(Client { id:id, key: key })
                 }
             }
         }
 
         None
+    }
+
+    pub fn connect (&mut self, server: &str) {
+        if let Ok(mut s) = TcpStream::connect(server) {
+            s.write_all(&[0]);
+            s.write_all(&self.key);
+            s.write_all(self.id.as_bytes());
+            //s.flush();
+        }
+        else { panic!("cannot connect to server {:?}",server) }
     }
 }
 
