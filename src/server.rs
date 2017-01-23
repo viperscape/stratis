@@ -70,9 +70,16 @@ impl Server {
                     1 => { //register
                         if let Some(c) = Client::load(&mut s) {
                             let mut server = server.lock().unwrap();
-                            println!("registered:{:?}",c.id);
-                            server.clients.push(c);
                             
+                            let mut is_reg = false;
+                            for n in server.clients.iter() {
+                                if n.id == c.id { is_reg = true }
+                            }
+
+                            if !is_reg {
+                                println!("registered:{:?}",c.id);
+                                server.clients.push(c);
+                            }
                         }
                     },
                     _ => panic!("cmd:{:?}",cmd)
