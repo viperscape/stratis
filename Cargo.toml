@@ -1,0 +1,6 @@
+[package]
+name = "stratis"
+version = "0.1.0"
+authors = ["viperscape <chrisfgill@gmail.com>"]
+
+[dependencies]
