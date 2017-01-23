@@ -4,3 +4,5 @@ version = "0.1.0"
 authors = ["viperscape <chrisfgill@gmail.com>"]
 
 [dependencies]
+hmac-sha1 = "^0.1"
+uuid = { version = "^0.3", features = ["v4"]}
