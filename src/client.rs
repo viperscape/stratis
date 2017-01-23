@@ -10,15 +10,15 @@ use std::net::TcpStream;
 
 #[derive(Debug)]
 pub struct Client {
-    id: Uuid,
-    key: [u8;20],
+    pub key: [u8;20],
+    pub id: Uuid,
 }
 
 impl Client {
-    pub fn new (path: &str) -> Client {
+    pub fn new (path: &str) -> Client { println!("new file");
         let id = uuid::Uuid::new_v4();
-        let m = hmacsha1::hmac_sha1(id.as_bytes(),
-                                    uuid::Uuid::new_v4().as_bytes());
+        let m = hmacsha1::hmac_sha1(uuid::Uuid::new_v4().as_bytes(),
+                                    id.as_bytes());
 
         
         let c = Client { id: id, key: m };
@@ -50,6 +50,7 @@ impl Client {
                 if let Ok(id) = Uuid::from_bytes(&id) {
                     return Some(Client { id:id, key: key })
                 }
+                else { println!("cannot uuid file") }
             }
         }
 
@@ -59,9 +60,21 @@ impl Client {
     pub fn connect (&mut self, server: &str) {
         if let Ok(mut s) = TcpStream::connect(server) {
             s.write_all(&[0]);
+            let m = uuid::Uuid::new_v4();
+            let hm = hmacsha1::hmac_sha1(&self.key, m.as_bytes());
+            
+            s.write_all(&hm);
+            s.write_all(self.id.as_bytes());
+            s.write_all(m.as_bytes());
+        }
+        else { panic!("cannot connect to server {:?}",server) }
+    }
+
+    pub fn register (&mut self, server: &str) {
+        if let Ok(mut s) = TcpStream::connect(server) {
+            s.write_all(&[1]);
             s.write_all(&self.key);
             s.write_all(self.id.as_bytes());
-            //s.flush();
         }
         else { panic!("cannot connect to server {:?}",server) }
     }

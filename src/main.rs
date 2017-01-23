@@ -15,10 +15,13 @@ fn main() {
     let serve = thread::spawn(move || {
         server::Server::new(ip_addr);
     });
-        
-    let mut client = client::Client::load_file("game/client.key").unwrap_or
-        (client::Client::new("game/client.key"));
+    
+    let mut client;
+    
+    if let Some(c) = client::Client::load_file("game/client.key") { client = c }
+    else { client = client::Client::new("game/client.key") }
 
+    client.register(ip_addr);
     client.connect(ip_addr);
     
     loop {
