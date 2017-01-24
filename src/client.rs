@@ -12,7 +12,7 @@ use std::net::TcpStream;
 pub struct Client {
     pub key: [u8;20],
     pub id: Uuid,
-    stream: Option<TcpStream>,
+    pub stream: Option<TcpStream>,
 }
 
 impl Client {

@@ -12,7 +12,9 @@ extern crate uuid;
 use self::uuid::Uuid;
 use client::Client;
 
-pub struct Player;
+pub struct Player {
+    client_idx: usize,
+}
 
 pub struct Server {
     clients: Vec<Client>,
@@ -46,6 +48,8 @@ impl Server {
         //new conn needs auth code
         let m = uuid::Uuid::new_v4();
         s.write_all(m.as_bytes());
+
+        let mut client_idx = None;
         
         loop {
             if let Ok(_) = s.read_exact(&mut cmd) {
@@ -55,14 +59,22 @@ impl Server {
                             let mut server = server.lock().unwrap();
 
                             let mut reg_key = None;
-                            for n in server.clients.iter() {
-                                if n.id == c.id { reg_key = Some(n.key) }
+                            for (i,n) in server.clients.iter_mut().enumerate() {
+                                if n.id == c.id {
+                                    reg_key = Some(n.key);
+                                    client_idx = Some(i);
+                                    if let Ok(stmp) = s.try_clone() {
+                                        n.stream = Some(stmp);
+                                    }
+                                    break
+                                }
                             }
 
                             if let Some(key) = reg_key {
                                 let hm = hmacsha1::hmac_sha1(&key, m.as_bytes());
                                 if c.key == hm {
-                                    server.players.insert(c.id,Player);
+                                    server.players.insert(c.id,
+                                                          Player {client_idx:client_idx.unwrap()});
                                     println!("login:{:?}",c.id);
                                     println!("total clients:{:?}",server.clients.len());
                                 }
