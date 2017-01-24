@@ -6,7 +6,9 @@
 
 
 ###### registration
-- new install generates uuid-v4 key pair locally, a client id and private key
+- new install generates uuid-v4 pair locally
+- one of the uuid is the client id
+- the other uuid is then applied to hmac with the message as the client id, this becomes the private key (private-key = hmac-sha1 [ key: uuid-v4, message: client-id ])
 - save locally the key-pair, this will authenticate the client to the server
 - connect to server
 - client sends first byte as 1u8, followed by private key and then client id
