@@ -42,6 +42,11 @@ impl Server {
 
     fn handler (mut server: Arc<Mutex<Server>>, mut s: TcpStream) {
         let mut cmd = [0;1];
+
+        //new conn needs auth code
+        let m = uuid::Uuid::new_v4();
+        s.write_all(m.as_bytes());
+        
         loop {
             if let Ok(_) = s.read_exact(&mut cmd) {
                 match cmd[0] {
@@ -49,37 +54,36 @@ impl Server {
                         if let Some(c) = Client::load(&mut s) {
                             let mut server = server.lock().unwrap();
 
-                            let mut is_reg = false;
+                            let mut reg_key = None;
                             for n in server.clients.iter() {
-                                if n.id == c.id { is_reg = true }
+                                if n.id == c.id { reg_key = Some(n.key) }
                             }
 
-                            if is_reg {
-                                let mut m = [0u8;16];
-                                if let Ok(_) = s.read_exact(&mut m) { //read in login key
-                                    let hm = hmacsha1::hmac_sha1(&c.key, &m);
-                                    
+                            if let Some(key) = reg_key {
+                                let hm = hmacsha1::hmac_sha1(&key, m.as_bytes());
+                                if c.key == hm {
                                     server.players.insert(c.id,Player);
                                     println!("login:{:?}",c.id);
                                     println!("total clients:{:?}",server.clients.len());
                                 }
+                                else {
+                                    panic!("client invalid login {:?}", c)
+                                }
+
                             }
-                            else { panic!("client unregistered {:?}", c.id) }
+                            else { panic!("client unregistered {:?}", c) }
                         }
                     },
                     1 => { //register
                         if let Some(c) = Client::load(&mut s) {
                             let mut server = server.lock().unwrap();
                             
-                            let mut is_reg = false;
                             for n in server.clients.iter() {
-                                if n.id == c.id { is_reg = true }
+                                if n.id == c.id { continue }
                             }
 
-                            if !is_reg {
-                                println!("registered:{:?}",c.id);
-                                server.clients.push(c);
-                            }
+                            println!("registered:{:?}",c.id);
+                            server.clients.push(c);
                         }
                     },
                     _ => panic!("cmd:{:?}",cmd)

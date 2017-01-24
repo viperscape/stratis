@@ -17,12 +17,19 @@ fn main() {
     });
     
     let mut client;
+    if let Some(c) = client::Client::load_file("game/client.key") {
+        client = c;
+        client.connect(ip_addr);
+        client.register(); // debug: register anyways
+        client.login();
+    }
+    else {
+        client = client::Client::new("game/client.key");
+        client.connect(ip_addr);
+        client.register();
+        client.login();
+    }
     
-    if let Some(c) = client::Client::load_file("game/client.key") { client = c }
-    else { client = client::Client::new("game/client.key") }
-
-    client.register(ip_addr);
-    client.connect(ip_addr);
     
     loop {
         input.clear();

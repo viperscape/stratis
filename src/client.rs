@@ -12,6 +12,7 @@ use std::net::TcpStream;
 pub struct Client {
     pub key: [u8;20],
     pub id: Uuid,
+    stream: Option<TcpStream>,
 }
 
 impl Client {
@@ -21,7 +22,7 @@ impl Client {
                                     id.as_bytes());
 
         
-        let c = Client { id: id, key: m };
+        let c = Client { id: id, key: m, stream: None };
 
         let mut f = File::create(path);
         if !f.is_ok() { panic!("cannot create client file") }
@@ -48,7 +49,7 @@ impl Client {
         if let Ok(_) = s.read_exact(&mut key) {
             if let Ok(_) = s.read_exact(&mut id) {
                 if let Ok(id) = Uuid::from_bytes(&id) {
-                    return Some(Client { id:id, key: key })
+                    return Some(Client { id:id, key: key, stream:None })
                 }
                 else { println!("cannot uuid file") }
             }
@@ -56,27 +57,33 @@ impl Client {
 
         None
     }
-
-    pub fn connect (&mut self, server: &str) {
+    
+    pub fn connect (&mut self, server: &str)  {
         if let Ok(mut s) = TcpStream::connect(server) {
-            s.write_all(&[0]);
-            let m = uuid::Uuid::new_v4();
-            let hm = hmacsha1::hmac_sha1(&self.key, m.as_bytes());
-            
-            s.write_all(&hm);
-            s.write_all(self.id.as_bytes());
-            s.write_all(m.as_bytes());
+            self.stream = Some(s);
         }
         else { panic!("cannot connect to server {:?}",server) }
     }
+    
+    pub fn login (&mut self) {
+        if let Some(ref mut s) = self.stream {
+            let mut m = [0u8;16];
+            if let Ok(_) = s.read_exact(&mut m) {
+                s.write_all(&[0]);
+                let hm = hmacsha1::hmac_sha1(&self.key, &m);
+                
+                s.write_all(&hm);
+                s.write_all(self.id.as_bytes());
+            }
+        }
+    }
 
-    pub fn register (&mut self, server: &str) {
-        if let Ok(mut s) = TcpStream::connect(server) {
+    pub fn register (&mut self) {
+        if let Some(ref mut s) = self.stream {
             s.write_all(&[1]);
             s.write_all(&self.key);
             s.write_all(self.id.as_bytes());
         }
-        else { panic!("cannot connect to server {:?}",server) }
     }
 }
 
