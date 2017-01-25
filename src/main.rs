@@ -5,6 +5,7 @@ mod game;
 mod client;
 mod server;
 
+use client::Client;
 
 #[allow(unused_must_use)]
 fn main() {
@@ -18,14 +19,14 @@ fn main() {
     });
     
     let mut client;
-    if let Some(c) = client::Client::load_file("game/client.key") {
+    if let Some(c) = Client::load_file("game/client.key") {
         client = c;
         client.connect(ip_addr);
         client.register(); // debug: register anyways
         client.login();
     }
     else {
-        client = client::Client::new("game/client.key");
+        client = Client::new("game/client.key");
         client.connect(ip_addr);
         client.register();
         client.login();
@@ -34,7 +35,7 @@ fn main() {
     if let Some(ref s) = client.stream {
         if let Ok(s) = s.try_clone() {
             thread::spawn(move || {
-                client::Client::handler(s);
+                Client::handler(s);
             });
         }
     }
