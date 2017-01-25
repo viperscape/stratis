@@ -4,6 +4,7 @@ extern crate uuid;
 use self::uuid::Uuid;
 
 use std::io::prelude::*;
+use std::io::BufReader;
 use std::fs::File;
 use std::net::TcpStream;
 
@@ -90,6 +91,26 @@ impl Client {
         if let Some(ref mut s) = self.stream {
             s.write_all(&[2]);
             s.write_all(&text.as_bytes());
+        }
+    }
+
+    pub fn handler (mut s: TcpStream) {
+        let mut cmd = [0u8;1];
+        loop {
+            if let Ok(_) = s.read_exact(&mut cmd) {
+                match cmd[0] {
+                    2 => {
+                        let mut text = String::new();
+                        let mut bs = BufReader::new(&s);
+                        if let Ok(_) = bs.read_line(&mut text) {
+                            println!("chat-server:{:?}",text.trim());
+                        }
+                    },
+                    _ => {
+                        println!("unknown command {:?}",cmd)
+                    },
+                }
+            }
         }
     }
 }

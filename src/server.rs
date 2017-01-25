@@ -102,9 +102,17 @@ impl Server {
                     },
                     2 => { //chat
                         let mut text = String::new();
-                        let mut bs = BufReader::new(&s);
-                        if let Ok(_) = bs.read_line(&mut text) {
-                            println!("chat:{:?}",text.trim());
+                        {
+                            let mut bs = BufReader::new(&s);
+                            bs.read_line(&mut text);
+                        }
+
+                        if text.chars().count() > 0 {
+                            println!("chat-client:{:?}",text.trim());
+
+                            //echo back
+                            s.write_all(&[2]);
+                            s.write_all(&text.as_bytes());
                         }
                     },
                     _ => panic!("cmd:{:?}",cmd)
