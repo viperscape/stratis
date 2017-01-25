@@ -13,11 +13,11 @@ use self::uuid::Uuid;
 use client::Client;
 
 pub struct Player {
-    client_idx: usize,
+    client_idx: usize, //this is dynamic in the sense that it may be different on intial run
 }
 
 pub struct Server {
-    clients: Vec<Client>,
+    clients: Vec<Client>, // this always grows
     players: HashMap<Uuid, Player>,
 }
 

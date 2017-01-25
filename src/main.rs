@@ -33,11 +33,8 @@ fn main() {
     
     loop {
         input.clear();
-        break; //debug break
         
         if let Ok(_) = io::stdin().read_line(&mut input) {
-            println!("{:?}",input.trim());
-
             match &input.trim() {
                 &"exit" => { break },
                 _ => { },
@@ -45,6 +42,4 @@ fn main() {
            
         }
     }
-
-    serve.join();
 }
