@@ -101,22 +101,10 @@ impl Server {
                         }
                     },
                     2 => { //chat
-                        if let Ok(_) = s.read_exact(&mut cmd) {
-                            match cmd[0] {
-                                0 => { //new-line based
-                                    let mut text = String::new();
-                                    let mut bs = BufReader::new(&s);
-                                    if let Ok(_) = bs.read_line(&mut text) {
-                                        println!("chat:{:?}",text);
-                                    }
-                                },
-                                _ => { //size based (up to 255)
-                                    let mut text = Vec::with_capacity(cmd[0] as usize);
-                                    if let Ok(_) = s.read_exact(&mut text) {
-                                        println!("chat:{:?}",text);
-                                    }
-                                },
-                            }
+                        let mut text = String::new();
+                        let mut bs = BufReader::new(&s);
+                        if let Ok(_) = bs.read_line(&mut text) {
+                            println!("chat:{:?}",text.trim());
                         }
                     },
                     _ => panic!("cmd:{:?}",cmd)
