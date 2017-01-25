@@ -5,6 +5,7 @@ use std::thread;
 use std::sync::{Arc, Mutex};
 
 use std::io::prelude::*;
+use std::io::BufReader;
 
 extern crate hmacsha1;
 extern crate uuid;
@@ -15,6 +16,7 @@ use client::Client;
 pub struct Player {
     client_idx: usize, //this is dynamic in the sense that it may be different on intial run
 }
+
 
 pub struct Server {
     clients: Vec<Client>, // this always grows
@@ -96,6 +98,25 @@ impl Server {
 
                             println!("registered:{:?}",c.id);
                             server.clients.push(c);
+                        }
+                    },
+                    2 => { //chat
+                        if let Ok(_) = s.read_exact(&mut cmd) {
+                            match cmd[0] {
+                                0 => { //new-line based
+                                    let mut text = String::new();
+                                    let mut bs = BufReader::new(&s);
+                                    if let Ok(_) = bs.read_line(&mut text) {
+                                        println!("chat:{:?}",text);
+                                    }
+                                },
+                                _ => { //size based (up to 255)
+                                    let mut text = Vec::with_capacity(cmd[0] as usize);
+                                    if let Ok(_) = s.read_exact(&mut text) {
+                                        println!("chat:{:?}",text);
+                                    }
+                                },
+                            }
                         }
                     },
                     _ => panic!("cmd:{:?}",cmd)

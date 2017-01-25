@@ -30,14 +30,17 @@ fn main() {
         client.login();
     }
     
-    
+    let mut chat = false;
     loop {
         input.clear();
         
         if let Ok(_) = io::stdin().read_line(&mut input) {
             match &input.trim() {
                 &"exit" => { break },
-                _ => { },
+                &"comm" => { chat = !chat; println!("comm online:{:?}",chat); }
+                _ => {
+                    if chat { client.chat(&input) }
+                },
             }
            
         }

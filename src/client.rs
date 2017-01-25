@@ -85,5 +85,13 @@ impl Client {
             s.write_all(self.id.as_bytes());
         }
     }
+
+    pub fn chat (&mut self, text: &str) {// NOTE: expects new line
+        if let Some(ref mut s) = self.stream {
+            s.write_all(&[2]);
+            s.write_all(&[0]);
+            s.write_all(&text.as_bytes());
+        }
+    }
 }
 
