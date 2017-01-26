@@ -8,12 +8,16 @@ use std::io::BufReader;
 use std::fs::File;
 use std::net::TcpStream;
 
+use std::thread;
+use std::sync::{Arc, Mutex};
 
-#[derive(Debug)]
+
+
+#[derive(Debug,Clone)]
 pub struct Client {
     pub key: [u8;20],
     pub id: Uuid,
-    pub stream: Option<TcpStream>,
+    pub stream: Option<Arc<Mutex<TcpStream>>>,
 }
 
 impl Client {
@@ -61,41 +65,63 @@ impl Client {
     
     pub fn connect (&mut self, server: &str)  {
         if let Ok(mut s) = TcpStream::connect(server) {
-            self.stream = Some(s);
+            self.stream = Some(Arc::new(Mutex::new(s)));
         }
         else { panic!("cannot connect to server {:?}",server) }
     }
     
     pub fn login (&mut self) {
-        if let Some(ref mut s) = self.stream {
-            let mut m = [0u8;16];
-            if let Ok(_) = s.read_exact(&mut m) {
-                s.write_all(&[0]);
-                let hm = hmacsha1::hmac_sha1(&self.key, &m);
-                
-                s.write_all(&hm);
-                s.write_all(self.id.as_bytes());
+        let mut c = self.clone();
+        if let Some(ref s) = self.stream {
+            if let Ok(ref mut s) = s.lock() {
+                let mut m = [0u8;16];
+                if let Ok(_) = s.read_exact(&mut m) {
+                    s.write_all(&[0]);
+                    let hm = hmacsha1::hmac_sha1(&self.key, &m);
+                    
+                    s.write_all(&hm);
+                    s.write_all(self.id.as_bytes());
+
+                    
+                    thread::spawn(move || {
+                        c.handler()
+                    });
+                }
             }
         }
     }
 
     pub fn register (&mut self) {
-        if let Some(ref mut s) = self.stream {
-            s.write_all(&[1]);
-            s.write_all(&self.key);
-            s.write_all(self.id.as_bytes());
+        if let Some(ref ms) = self.stream {
+            if let Ok(ref mut s) = ms.lock() {
+                s.write_all(&[1]);
+                s.write_all(&self.key);
+                s.write_all(self.id.as_bytes());
+            }
         }
     }
 
     pub fn chat (&mut self, text: &str) {// NOTE: expects new line
-        if let Some(ref mut s) = self.stream {
-            s.write_all(&[2]);
-            s.write_all(&text.as_bytes());
+        if let Some(ref ms) = self.stream {
+            if let Ok(ref mut s) = ms.lock() {
+                s.write_all(&[2]);
+                s.write_all(&text.as_bytes());
+            }
         }
     }
 
-    pub fn handler (mut s: TcpStream) {
+    fn handler (&mut self) {
         let mut cmd = [0u8;1];
+        let mut s; // NOTE: this should be read from only!
+
+        if let Some(ref ms) = self.stream {
+            if let Ok(mut s_) = ms.lock() {
+                s = s_.try_clone().unwrap();
+            }
+            else { panic!("client stream mutex poisoned") }
+        }
+        else { panic!("no client stream available") }
+        
         loop {
             if let Ok(_) = s.read_exact(&mut cmd) {
                 match cmd[0] {

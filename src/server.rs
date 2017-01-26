@@ -66,7 +66,7 @@ impl Server {
                                     reg_key = Some(n.key);
                                     client_idx = Some(i);
                                     if let Ok(stmp) = s.try_clone() {
-                                        n.stream = Some(stmp);
+                                        n.stream = Some(Arc::new(Mutex::new(stmp)));
                                     }
                                     break
                                 }

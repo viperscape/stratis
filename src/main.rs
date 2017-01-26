@@ -32,13 +32,6 @@ fn main() {
         client.login();
     }
 
-    if let Some(ref s) = client.stream {
-        if let Ok(s) = s.try_clone() {
-            thread::spawn(move || {
-                Client::handler(s);
-            });
-        }
-    }
     
     let mut chat = false;
     loop {
@@ -46,7 +39,8 @@ fn main() {
         
         if let Ok(_) = io::stdin().read_line(&mut input) {
             match &input.trim() {
-                &"exit" => { break },
+                &"exit" => { if chat { client.chat(&input) }
+                             else { break } },
                 &"comm" => { chat = !chat; println!("comm online:{:?}",chat); }
                 _ => {
                     if chat { client.chat(&input) }
