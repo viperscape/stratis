@@ -3,7 +3,7 @@ use std::collections::HashMap;
 
 use std::thread;
 use std::sync::{Arc, Mutex};
-use std::sync::mpsc::{channel, Sender, Receiver};
+use std::sync::mpsc::{channel, Sender};
 
 use std::io::prelude::*;
 use std::io::BufReader;
@@ -14,6 +14,7 @@ extern crate uuid;
 use self::uuid::Uuid;
 use client::Client;
 use distributor::Distributor;
+use distributor::Kind as DistKind;
 
 pub struct Player {
     client_idx: usize, //this is dynamic in the sense that it may be different on intial run
@@ -24,15 +25,20 @@ pub struct Player {
 pub struct Server {
     clients: Vec<Client>, // this always grows
     players: HashMap<Uuid, Player>,
+    pub dist_tx: Sender<DistKind<TcpStream>>,
 }
 
 impl Server {
     pub fn new(ip: &str) {
         let listener = TcpListener::bind(ip).unwrap();
-
+        
+        let (dist_tx,mut dist) = Distributor::new();
+        thread::spawn(move || dist.run());
+        
         let server = Server {
             clients: vec!(),
             players: HashMap::new(),
+            dist_tx: dist_tx,
         };
         let server = Arc::new(Mutex::new(server));
         
@@ -68,9 +74,7 @@ impl Server {
                                 if n.id == c.id {
                                     reg_key = Some(n.key);
                                     client_idx = Some(i);
-                                    if let Ok(stmp) = s.try_clone() {
-                                        n.stream = Some(Arc::new(Mutex::new(stmp)));
-                                    }
+                                    
                                     break
                                 }
                             }
@@ -80,6 +84,12 @@ impl Server {
                                 if c.key == hm {
                                     server.players.insert(c.id,
                                                           Player {client_idx:client_idx.unwrap()});
+
+                                    if let Ok(stmp) = s.try_clone() {
+                                        //n.stream = Some(Arc::new(Mutex::new(stmp)));
+                                        server.dist_tx.send(DistKind::Add(c.id,stmp));
+                                    }
+                                    
                                     println!("login:{:?}",c.id);
                                     println!("total clients:{:?}",server.clients.len());
                                 }
@@ -113,9 +123,13 @@ impl Server {
                         if text.chars().count() > 0 {
                             println!("chat-client:{:?}",text.trim());
 
-                            //echo back
-                            s.write_all(&[2]);
-                            s.write_all(&text.as_bytes());
+                            //broadcast
+                            let mut data = Vec::new();
+                            data.push(2u8);
+                            data.append(&mut text.into_bytes());
+
+                            let mut server = server.lock().unwrap();
+                            server.dist_tx.send(DistKind::Broadcast(data));
                         }
                     },
                     _ => panic!("cmd:{:?}",cmd)
