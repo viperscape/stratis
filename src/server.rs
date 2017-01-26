@@ -3,6 +3,7 @@ use std::collections::HashMap;
 
 use std::thread;
 use std::sync::{Arc, Mutex};
+use std::sync::mpsc::{channel, Sender, Receiver};
 
 use std::io::prelude::*;
 use std::io::BufReader;
@@ -12,10 +13,12 @@ extern crate uuid;
 
 use self::uuid::Uuid;
 use client::Client;
+use distributor::Distributor;
 
 pub struct Player {
     client_idx: usize, //this is dynamic in the sense that it may be different on intial run
 }
+
 
 
 pub struct Server {

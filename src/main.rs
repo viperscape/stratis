@@ -4,6 +4,7 @@ use std::thread;
 mod game;
 mod client;
 mod server;
+mod distributor;
 
 use client::Client;
 
