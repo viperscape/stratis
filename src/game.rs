@@ -1,3 +1,6 @@
+#![allow(dead_code)]
+#![allow(unused_must_use)]
+
 extern crate std;
 extern crate hmacsha1;
 
@@ -10,7 +13,7 @@ pub struct Game {
 impl Game {
     pub fn new () -> Game {
         std::fs::create_dir("game");
-        let mut f = File::create("game/game.log");
+        let f = File::create("game/game.log");
         if !f.is_ok() { panic!("cannot create game log") }
 
         Game { file: f.unwrap() }
