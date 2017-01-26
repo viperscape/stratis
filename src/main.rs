@@ -38,15 +38,19 @@ fn main() {
         input.clear();
         
         if let Ok(_) = io::stdin().read_line(&mut input) {
-            match &input.trim() {
-                &"exit" => { if chat { client.chat(&input) }
-                             else { break } },
-                &"comm" => { chat = !chat; println!("comm online:{:?}",chat); }
+            let cmd = input.trim();
+            match cmd {
+                "comm" => { chat = !chat; println!("comm online:{:?}",chat); }
                 _ => {
                     if chat { client.chat(&input) }
+                    else {
+                        match cmd {
+                            "exit" => { break },
+                            _ => { }
+                        }
+                    }
                 },
-            }
-           
+            }            
         }
     }
 }
