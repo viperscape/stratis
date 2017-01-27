@@ -55,7 +55,7 @@ impl Server {
 
     fn handler (mut server: Arc<Mutex<Server>>, mut s: TcpStream) {
         let mut cmd = [0;1];
-
+                
         //new conn needs auth code
         let m = uuid::Uuid::new_v4();
         s.write_all(m.as_bytes());
@@ -66,40 +66,7 @@ impl Server {
             if let Ok(_) = s.read_exact(&mut cmd) {
                 match cmd[0] {
                     0 => { //login
-                        if let Some(c) = Client::load(&mut s) {
-                            let mut server = server.lock().unwrap();
-
-                            let mut reg_key = None;
-                            for (i,n) in server.clients.iter_mut().enumerate() {
-                                if n.id == c.id {
-                                    reg_key = Some(n.key);
-                                    client_idx = Some(i);
-                                    
-                                    break
-                                }
-                            }
-
-                            if let Some(key) = reg_key {
-                                let hm = hmacsha1::hmac_sha1(&key, m.as_bytes());
-                                if c.key == hm {
-                                    server.players.insert(c.id,
-                                                          Player {client_idx:client_idx.unwrap()});
-
-                                    if let Ok(stmp) = s.try_clone() {
-                                        //n.stream = Some(Arc::new(Mutex::new(stmp)));
-                                        server.dist_tx.send(DistKind::Add(c.id,stmp));
-                                    }
-                                    
-                                    println!("login:{:?}",c.id);
-                                    println!("total clients:{:?}",server.clients.len());
-                                }
-                                else {
-                                    panic!("client invalid login {:?}", c)
-                                }
-
-                            }
-                            else { panic!("client unregistered {:?}", c) }
-                        }
+                        client_idx = Server::login(&mut server, &mut s, m);
                     },
                     1 => { //register
                         if let Some(c) = Client::load(&mut s) {
@@ -113,30 +80,85 @@ impl Server {
                             server.clients.push(c);
                         }
                     },
-                    2 => { //chat
-                        let mut text = String::new();
-                        {
-                            let mut bs = BufReader::new(&s);
-                            bs.read_line(&mut text);
+                    _ => {
+                        if client_idx.is_some() {
+                            match cmd[0] {
+                                2 => { //chat
+                                    Server::chat(&mut server, &mut s);
+                                },
+                                _ => panic!("unknown cmd:{:?}",cmd)
+                            }
                         }
-
-                        if text.chars().count() > 0 {
-                            println!("chat-client:{:?}",text.trim());
-
-                            //broadcast
-                            let mut data = Vec::new();
-                            data.push(2u8);
-                            data.append(&mut text.into_bytes());
-
-                            let mut server = server.lock().unwrap();
-                            server.dist_tx.send(DistKind::Broadcast(data));
-                        }
-                    },
-                    _ => panic!("cmd:{:?}",cmd)
+                    }
                 }
             }
+            else { break } //drop dead client
         }
 
         println!("client dropped");
+    }
+
+    fn chat (server: &mut Arc<Mutex<Server>>,
+             mut s: &mut TcpStream,) {
+        let mut text = String::new();
+        {
+            let mut bs = BufReader::new(s);
+            bs.read_line(&mut text);
+        }
+
+        if text.chars().count() > 0 {
+            println!("chat-client:{:?}",text.trim());
+
+            //broadcast
+            let mut data = Vec::new();
+            data.push(2u8);
+            data.append(&mut text.into_bytes());
+
+            let mut server = server.lock().unwrap();
+            server.dist_tx.send(DistKind::Broadcast(data));
+        }
+    }
+
+    fn login (server: &mut Arc<Mutex<Server>>,
+              mut s: &mut TcpStream,
+              m: Uuid) -> Option<usize> {
+        let mut client_idx = None;
+        
+        if let Some(c) = Client::load(&mut s) {
+            let mut server = server.lock().unwrap();
+
+            let mut reg_key = None;
+            for (i,n) in server.clients.iter_mut().enumerate() {
+                if n.id == c.id {
+                    reg_key = Some(n.key);
+                    client_idx = Some(i);
+                    
+                    break
+                }
+            }
+
+            if let Some(key) = reg_key {
+                let hm = hmacsha1::hmac_sha1(&key, m.as_bytes());
+                if c.key == hm {
+                    server.players.insert(c.id,
+                                          Player {client_idx:client_idx.unwrap()});
+
+                    if let Ok(stmp) = s.try_clone() {
+                        //n.stream = Some(Arc::new(Mutex::new(stmp)));
+                        server.dist_tx.send(DistKind::Add(c.id,stmp));
+                    }
+                    
+                    println!("login:{:?}",c.id);
+                    println!("total clients:{:?}",server.clients.len());
+                }
+                else {
+                    panic!("client invalid login {:?}", c)
+                }
+
+            }
+            else { panic!("client unregistered {:?}", c) }
+        }
+
+       client_idx
     }
 }
