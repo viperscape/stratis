@@ -26,27 +26,40 @@ impl<S:Write> Distributor<S>  {
     }
 
     pub fn run (&mut self) {
+        let mut dead: Vec<Uuid> = vec!();
+        
         for n in self.rx.iter() {
             match n {
                 Kind::Broadcast(data) => {
                     for (uuid,mut stream) in self.sx.iter_mut() {
-                        stream.write_all(&data);
+                        if stream.write_all(&data).is_err() {
+                            dead.push(uuid.clone());
+                        }
                     }
                 },
                 Kind::Select(uuid,data) => {
                     if let Some(stream) = self.sx.get_mut(&uuid) {
-                        stream.write_all(&data);
+                        if stream.write_all(&data).is_err() {
+                            dead.push(uuid.clone());
+                        }
                     }
                 },
                 Kind::Group(mut uuids,data) => {
                     for uuid in uuids.drain(..) {
                         if let Some(stream) = self.sx.get_mut(&uuid) {
-                            stream.write_all(&data);
+                            if stream.write_all(&data).is_err() {
+                                dead.push(uuid.clone());
+                            }
                         }
                     }
                 },
                 Kind::Add(uuid,stream) => { self.sx.insert(uuid,stream); }
                 Kind::Remove(uuid) => { self.sx.remove(&uuid); }
+            }
+
+            // remove dead streams
+            for n in dead.drain(..) {
+                self.sx.remove(&n);
             }
         }
     }
