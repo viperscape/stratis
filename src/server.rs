@@ -110,7 +110,9 @@ impl Server {
             println!("chat-client:{:?}",text.trim());
             
             //broadcast
-            let data = text_as_bytes(&text);
+            let (mut data, bytes) = text_as_bytes(&text);
+            data.extend_from_slice(bytes);
+                
             let mut server = server.lock().unwrap();
             server.dist_tx.send(DistKind::Broadcast(data));
         }

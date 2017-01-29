@@ -32,23 +32,12 @@ pub fn read_text (mut s: &mut TcpStream,) -> Option<String> {
 }
 
 pub fn write_text (mut s: &mut TcpStream, text: &str) {
-    let mut bytes = &text.as_bytes();
-    
-    let len;
-    if bytes.len() > MAX_TEXT_LEN { len = MAX_TEXT_LEN; }
-    else { len = bytes.len(); }
-    
-    let mut size = [0;2];
-    BigEndian::write_u16(&mut size, len as u16);
-    
-    
-    s.write_all(&[2]);
-    s.write_all(&size);
-    s.write_all(&bytes[0..len]);
+    let (data, bytes) = text_as_bytes(text);
+    s.write_all(&data);
+    s.write_all(&bytes);
 }
 
-// NOTE: may be better to return a tuple with the bytes slice separate from vec
-pub fn text_as_bytes (text: &str) -> Vec<u8> {
+pub fn text_as_bytes (text: &str) -> (Vec<u8>, &[u8]) {
     let mut bytes = &text.as_bytes();
     
     let len;
@@ -58,8 +47,5 @@ pub fn text_as_bytes (text: &str) -> Vec<u8> {
     let mut size = [0;2];
     BigEndian::write_u16(&mut size, len as u16);
     
-    let mut v = vec!(2, size[0],size[1]);
-    v.extend_from_slice(&bytes[0..len]);
-
-    v
+    (vec![2, size[0],size[1]], &bytes[0..len])
 }
