@@ -1,16 +1,19 @@
 extern crate hmacsha1;
 extern crate uuid;
+extern crate byteorder;
 
 use self::uuid::Uuid;
 
 use std::io::prelude::*;
-use std::io::BufReader;
+//use std::io::BufReader;
 use std::fs::File;
 use std::net::TcpStream;
 
 use std::thread;
 use std::sync::{Arc, Mutex};
 
+
+use chat::{MAX_TEXT_LEN,read_text,write_text};
 
 
 #[derive(Debug,Clone)]
@@ -101,11 +104,10 @@ impl Client {
         }
     }
 
-    pub fn chat (&mut self, text: &str) {// NOTE: expects new line
+    pub fn chat (&mut self, text: &str) {
         if let Some(ref ms) = self.stream {
             if let Ok(ref mut s) = ms.lock() {
-                s.write_all(&[2]);
-                s.write_all(&text.as_bytes());
+                write_text(s, text);
             }
         }
     }
@@ -126,9 +128,7 @@ impl Client {
             if let Ok(_) = s.read_exact(&mut cmd) {
                 match cmd[0] {
                     2 => {
-                        let mut text = String::new();
-                        let mut bs = BufReader::new(&s);
-                        if let Ok(_) = bs.read_line(&mut text) {
+                        if let Some(text) = read_text(&mut s) {
                             println!("chat-server:{:?}",text.trim());
                         }
                     },

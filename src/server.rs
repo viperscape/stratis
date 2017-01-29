@@ -10,9 +10,14 @@ use std::io::BufReader;
 
 extern crate hmacsha1;
 extern crate uuid;
+extern crate byteorder;
 
 use self::uuid::Uuid;
-use client::Client;
+use self::byteorder::{BigEndian,ByteOrder};
+
+
+use client::{Client};
+use chat::{read_text,text_as_bytes, MAX_TEXT_LEN};
 use distributor::Distributor;
 use distributor::Kind as DistKind;
 
@@ -100,20 +105,12 @@ impl Server {
 
     fn chat (server: &mut Arc<Mutex<Server>>,
              mut s: &mut TcpStream,) {
-        let mut text = String::new();
-        {
-            let mut bs = BufReader::new(s);
-            bs.read_line(&mut text);
-        }
-
-        if text.chars().count() > 0 {
+        
+        if let Some(text) = read_text(s) {
             println!("chat-client:{:?}",text.trim());
-
+            
             //broadcast
-            let mut data = Vec::new();
-            data.push(2u8);
-            data.append(&mut text.into_bytes());
-
+            let data = text_as_bytes(&text);
             let mut server = server.lock().unwrap();
             server.dist_tx.send(DistKind::Broadcast(data));
         }

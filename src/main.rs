@@ -5,6 +5,7 @@ mod game;
 mod client;
 mod server;
 mod distributor;
+mod chat;
 
 use client::Client;
 
@@ -34,7 +35,7 @@ fn main() {
     }
 
     
-    let mut chat = false;
+    let mut chat = true;
     loop {
         input.clear();
         
