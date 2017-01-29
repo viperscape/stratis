@@ -16,6 +16,9 @@ pub fn read_text (mut s: &mut TcpStream,) -> Option<String> {
     
     if let Ok(_) = s.read_exact(&mut size) {
         let size = BigEndian::read_u16(&size);
+
+        if size > MAX_TEXT_LEN as u16 { panic!("unbounded chat size reached") }
+        
         let mut v = vec![0;size as usize];
         
         if let Ok(_) = s.read_exact(&mut v) {
