@@ -20,6 +20,7 @@ use client::{Client};
 use chat::{read_text,text_as_bytes, MAX_TEXT_LEN};
 use distributor::Distributor;
 use distributor::Kind as DistKind;
+use store::Store;
 
 pub struct Player {
     client_idx: usize, //this is dynamic in the sense that it may be different on intial run
@@ -39,6 +40,9 @@ impl Server {
         
         let (dist_tx,mut dist) = Distributor::new();
         thread::spawn(move || dist.run());
+
+        let store = Store::new();
+        println!("{:?}",store);
         
         let server = Server {
             clients: vec!(),
@@ -46,6 +50,8 @@ impl Server {
             dist_tx: dist_tx,
         };
         let server = Arc::new(Mutex::new(server));
+
+        
         
         for s in listener.incoming() {
             match s {
