@@ -1,8 +1,5 @@
 extern crate uuid;
 
-
-use std::thread;
-use std::sync::{Arc, Mutex};
 use std::sync::mpsc::{channel, Sender, Receiver};
 use std::collections::{HashMap};
 use std::io::Write;
@@ -65,6 +62,7 @@ impl<S:Write> Distributor<S>  {
     }
 }
 
+#[allow(dead_code)]
 pub enum Kind<S> {
     Add(Uuid,S),
     Remove(Uuid),

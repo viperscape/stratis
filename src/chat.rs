@@ -1,16 +1,14 @@
 use std::net::{TcpStream};
 
 use std::io::prelude::*;
-use std::io::BufReader;
 
 extern crate byteorder;
 
 use self::byteorder::{BigEndian,ByteOrder};
-use std::string::FromUtf8Error;
 
 pub const MAX_TEXT_LEN: usize = 2048;
 
-
+#[allow(unused_must_use)]
 pub fn read_text (mut s: &mut TcpStream,) -> Option<String> {
     let mut size = [0;2];
     
@@ -31,6 +29,7 @@ pub fn read_text (mut s: &mut TcpStream,) -> Option<String> {
     return None
 }
 
+#[allow(unused_must_use)]
 pub fn write_text (mut s: &mut TcpStream, text: &str) {
     let (data, bytes) = text_as_bytes(text);
     s.write_all(&data);
@@ -38,7 +37,7 @@ pub fn write_text (mut s: &mut TcpStream, text: &str) {
 }
 
 pub fn text_as_bytes (text: &str) -> (Vec<u8>, &[u8]) {
-    let mut bytes = &text.as_bytes();
+    let bytes = &text.as_bytes();
     
     let len;
     if bytes.len() > MAX_TEXT_LEN { len = MAX_TEXT_LEN; }

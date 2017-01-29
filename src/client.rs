@@ -13,7 +13,7 @@ use std::thread;
 use std::sync::{Arc, Mutex};
 
 
-use chat::{MAX_TEXT_LEN,read_text,write_text};
+use chat::{read_text,write_text};
 
 
 #[derive(Debug,Clone)]
@@ -24,6 +24,7 @@ pub struct Client {
 }
 
 impl Client {
+    #[allow(unused_must_use)]
     pub fn new (path: &str) -> Client { println!("new file");
         let id = uuid::Uuid::new_v4();
         let m = hmacsha1::hmac_sha1(uuid::Uuid::new_v4().as_bytes(),
@@ -32,7 +33,7 @@ impl Client {
         
         let c = Client { id: id, key: m, stream: None };
 
-        let mut f = File::create(path);
+        let f = File::create(path);
         if !f.is_ok() { panic!("cannot create client file") }
         if let Ok(mut f) = f {
             f.write_all(&c.key);
@@ -67,12 +68,13 @@ impl Client {
     }
     
     pub fn connect (&mut self, server: &str)  {
-        if let Ok(mut s) = TcpStream::connect(server) {
+        if let Ok(s) = TcpStream::connect(server) {
             self.stream = Some(Arc::new(Mutex::new(s)));
         }
         else { panic!("cannot connect to server {:?}",server) }
     }
-    
+
+    #[allow(unused_must_use)]
     pub fn login (&mut self) {
         let mut c = self.clone();
         if let Some(ref s) = self.stream {
@@ -94,6 +96,7 @@ impl Client {
         }
     }
 
+    #[allow(unused_must_use)]
     pub fn register (&mut self) {
         if let Some(ref ms) = self.stream {
             if let Ok(ref mut s) = ms.lock() {
@@ -104,6 +107,7 @@ impl Client {
         }
     }
 
+    #[allow(unused_must_use)]
     pub fn chat (&mut self, text: &str) {
         if let Some(ref ms) = self.stream {
             if let Ok(ref mut s) = ms.lock() {
@@ -117,7 +121,7 @@ impl Client {
         let mut s; // NOTE: this should be read from only!
 
         if let Some(ref ms) = self.stream {
-            if let Ok(mut s_) = ms.lock() {
+            if let Ok(s_) = ms.lock() {
                 s = s_.try_clone().unwrap();
             }
             else { panic!("client stream mutex poisoned") }

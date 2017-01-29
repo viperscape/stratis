@@ -3,25 +3,25 @@ use std::collections::HashMap;
 
 use std::thread;
 use std::sync::{Arc, Mutex};
-use std::sync::mpsc::{channel, Sender};
+use std::sync::mpsc::{Sender};
 
 use std::io::prelude::*;
-use std::io::BufReader;
+//use std::io::BufReader;
 
 extern crate hmacsha1;
 extern crate uuid;
 extern crate byteorder;
 
 use self::uuid::Uuid;
-use self::byteorder::{BigEndian,ByteOrder};
 
 
 use client::{Client};
-use chat::{read_text,text_as_bytes, MAX_TEXT_LEN};
+use chat::{read_text,text_as_bytes};
 use distributor::Distributor;
 use distributor::Kind as DistKind;
 use store::Store;
 
+#[allow(dead_code)]
 pub struct Player {
     client_idx: usize, //this is dynamic in the sense that it may be different on intial run
 }
@@ -64,6 +64,7 @@ impl Server {
         }
     }
 
+    #[allow(unused_must_use)]
     fn handler (mut server: Arc<Mutex<Server>>, mut s: TcpStream) {
         let mut cmd = [0;1];
                 
@@ -109,6 +110,7 @@ impl Server {
         println!("client dropped");
     }
 
+    #[allow(unused_must_use)]
     fn chat (server: &mut Arc<Mutex<Server>>,
              mut s: &mut TcpStream,) {
         
@@ -119,11 +121,12 @@ impl Server {
             let (mut data, bytes) = text_as_bytes(&text);
             data.extend_from_slice(bytes);
                 
-            let mut server = server.lock().unwrap();
+            let server = server.lock().unwrap();
             server.dist_tx.send(DistKind::Broadcast(data));
         }
     }
 
+    #[allow(unused_must_use)]
     fn login (server: &mut Arc<Mutex<Server>>,
               mut s: &mut TcpStream,
               m: Uuid) -> Option<usize> {

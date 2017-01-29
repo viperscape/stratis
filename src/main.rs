@@ -14,10 +14,10 @@ use client::Client;
 fn main() {
     let mut input = String::new();
     
-    let game = game::Game::new();
+    let _game = game::Game::new();
     let ip_addr = "127.0.0.1:9996";
     
-    let server_thread = thread::spawn(move || {
+    let _server_thread = thread::spawn(move || {
         server::Server::new(ip_addr);
     });
     
