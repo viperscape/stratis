@@ -87,10 +87,11 @@ impl Server {
                                 if n.id == c.id { continue }
                             }
 
-                            //let key = Vec::from(c.key);
+                            let mut key = vec!();
+                            key.extend_from_slice(&c.key); //FIXME: postgres execute doesn't like &[u8] for ToSql traits
                             if let Some(ref store) = server.store {
-                            //store.conn.execute("INSERT INTO clients (uuid, key) VALUES ($1, $2)",
-                            //         &[&c.id, &key]);
+                                store.conn.execute("INSERT INTO clients (uuid, key) VALUES ($1, $2)",
+                                                   &[&c.id, &key]);
                             }
                             
                             println!("registered:{:?}",c.id);
