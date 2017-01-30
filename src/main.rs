@@ -25,7 +25,6 @@ fn main() {
     if let Some(c) = Client::load_file("game/client.key") {
         client = c;
         client.connect(ip_addr);
-        client.register(); // debug: register anyways
         client.login();
     }
     else {

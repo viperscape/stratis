@@ -18,7 +18,7 @@ use chat::{read_text,write_text};
 
 #[derive(Debug,Clone)]
 pub struct Client {
-    pub key: [u8;20],
+    pub key: Vec<u8>,
     pub id: Uuid,
     pub stream: Option<Arc<Mutex<TcpStream>>>,
 }
@@ -31,7 +31,7 @@ impl Client {
                                     id.as_bytes());
 
         
-        let c = Client { id: id, key: m, stream: None };
+        let c = Client { id: id, key: From::from(&m[..]), stream: None };
 
         let f = File::create(path);
         if !f.is_ok() { panic!("cannot create client file") }
@@ -58,7 +58,7 @@ impl Client {
         if let Ok(_) = s.read_exact(&mut key) {
             if let Ok(_) = s.read_exact(&mut id) {
                 if let Ok(id) = Uuid::from_bytes(&id) {
-                    return Some(Client { id:id, key: key, stream:None })
+                    return Some(Client { id:id, key: From::from(&key[..]), stream:None })
                 }
                 else { println!("cannot uuid file") }
             }

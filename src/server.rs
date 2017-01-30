@@ -42,12 +42,24 @@ impl Server {
         let (dist_tx,mut dist) = Distributor::new();
         thread::spawn(move || dist.run());
         
-        let server = Server {
+        let mut server = Server {
             clients: vec!(),
             players: HashMap::new(),
             dist_tx: dist_tx,
             store: Store::new(),
         };
+
+        if let Some(ref store) = server.store {
+            if let Ok(r) = store.conn.query("select * from clients",&[]) {
+                for n in r.iter() {
+                    server.clients.push(
+                        Client { key:n.get(1),
+                                 id:n.get(0),
+                                 stream: None, });
+                }
+            }
+        }
+        
         let server = Arc::new(Mutex::new(server));
 
         
@@ -144,7 +156,7 @@ impl Server {
             let mut reg_key = None;
             for (i,n) in server.clients.iter_mut().enumerate() {
                 if n.id == c.id {
-                    reg_key = Some(n.key);
+                    reg_key = Some(n.key.clone());
                     client_idx = Some(i);
                     
                     break
