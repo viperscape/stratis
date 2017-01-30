@@ -111,6 +111,7 @@ dependencies = [
  "hex 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "phf 0.7.20 (registry+https://github.com/rust-lang/crates.io-index)",
  "postgres-protocol 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "uuid 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]

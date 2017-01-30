@@ -7,4 +7,4 @@ authors = ["viperscape <chrisfgill@gmail.com>"]
 hmac-sha1 = "^0.1"
 uuid = { version = "^0.3", features = ["v4"]}
 byteorder = "1"
-postgres = "0.13.5"
+postgres = { version = "0.13.5", features = ["with-uuid"]}

@@ -4,7 +4,7 @@ use self::postgres::{Connection, TlsMode};
 
 #[derive(Debug)]
 pub struct Store {
-    conn: Connection,
+    pub conn: Connection,
 }
 
 impl Store {

@@ -32,6 +32,7 @@ pub struct Server {
     clients: Vec<Client>, // this always grows
     players: HashMap<Uuid, Player>,
     pub dist_tx: Sender<DistKind<TcpStream>>,
+    store: Option<Store>,
 }
 
 impl Server {
@@ -40,14 +41,12 @@ impl Server {
         
         let (dist_tx,mut dist) = Distributor::new();
         thread::spawn(move || dist.run());
-
-        let store = Store::new();
-        println!("{:?}",store);
         
         let server = Server {
             clients: vec!(),
             players: HashMap::new(),
             dist_tx: dist_tx,
+            store: Store::new(),
         };
         let server = Arc::new(Mutex::new(server));
 
@@ -88,6 +87,12 @@ impl Server {
                                 if n.id == c.id { continue }
                             }
 
+                            //let key = Vec::from(c.key);
+                            if let Some(ref store) = server.store {
+                            //store.conn.execute("INSERT INTO clients (uuid, key) VALUES ($1, $2)",
+                            //         &[&c.id, &key]);
+                            }
+                            
                             println!("registered:{:?}",c.id);
                             server.clients.push(c);
                         }
