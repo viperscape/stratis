@@ -5,7 +5,7 @@
 - private key and hmac are both 16 bytes in length
 
 
-###### registration
+##### registration
 - new install generates uuid-v4 pair locally
 - one of the uuid is the client id
 - the other uuid is then applied to hmac with the message as the client id, this becomes the private key (private-key = hmac-sha1 [ key: uuid-v4, message: client-id ])
