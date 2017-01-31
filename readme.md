@@ -1,10 +1,10 @@
 #### STRATIS
 
-Strategic Intelligence System (acronym may change), or STRATIS for short, is an online game combining strategy, resource management, trade, and factions. Currently under development of the full span of what STRATIS is and will be.
+Strategic Interstellar System (acronym may change), or STRATIS for short, is an online game combining strategy, resource management, trade, and factions. Currently under development of the full span of what STRATIS is and will be.
 
 ##### immediate planned features
 
-- online gameplay (shooting for rougly 1000-1500 concurrent users per region)
+- online gameplay
 - messaging/chat direct to user, factions, regions' trade-post bulletin boards
 - minimally scripted AI interaction (eg: press 1 for asking '...')
 - fleet inventory management and deployment
