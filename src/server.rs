@@ -93,10 +93,11 @@ impl Server {
                             }
 
                             if let Some(ref store) = server.store {
-                                store.add_client(&c);
+                                let r = store.add_client(&c);
+                                println!("registered ({:?}):{:?}",r, c.id);
                             }
                             
-                            println!("registered:{:?}",c.id);
+                            
                             server.clients.push(c);
                         }
                     },
