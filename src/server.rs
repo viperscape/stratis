@@ -50,14 +50,7 @@ impl Server {
         };
 
         if let Some(ref store) = server.store {
-            if let Ok(r) = store.conn.query("select * from clients",&[]) {
-                for n in r.iter() {
-                    server.clients.push(
-                        Client { key:n.get(1),
-                                 id:n.get(0),
-                                 stream: None, });
-                }
-            }
+            server.clients = store.get_clients();
         }
         
         let server = Arc::new(Mutex::new(server));
@@ -100,8 +93,7 @@ impl Server {
                             }
 
                             if let Some(ref store) = server.store {
-                                store.conn.execute("INSERT INTO clients (uuid, key) VALUES ($1, $2)",
-                                                   &[&c.id, &c.key]);
+                                store.add_client(&c);
                             }
                             
                             println!("registered:{:?}",c.id);
