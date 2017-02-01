@@ -39,7 +39,7 @@ impl Server {
     pub fn new(ip: &str) {
         let listener = TcpListener::bind(ip).unwrap();
         
-        let (dist_tx,mut dist) = Distributor::new();
+        let (dist_tx,mut dist) = Distributor::new(Store::default());
         thread::spawn(move || dist.run());
         
         let mut server = Server {

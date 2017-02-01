@@ -1,12 +1,15 @@
 extern crate postgres;
+extern crate uuid;
 
 use self::postgres::{Connection, TlsMode};
 use client::Client;
+use self::uuid::Uuid;
 
 pub trait DataStore: Sized {
     fn default () -> Option<Self>;
     fn get_clients (&self) -> Vec<Client>;
     fn add_client (&self, c: &Client) -> bool;
+    fn msg_store (&self, uuid: &Uuid, data: &Vec<u8>) -> bool;
 }
 
 #[derive(Debug)]
@@ -40,5 +43,9 @@ impl DataStore for Store {
     fn add_client (&self, c: &Client) -> bool {
         self.conn.execute("INSERT INTO clients (uuid, key) VALUES ($1, $2)",
                           &[&c.id, &c.key]).is_ok()
+    }
+
+    fn msg_store (&self, uuid: &Uuid, data: &Vec<u8>) -> bool {
+        false
     }
 }

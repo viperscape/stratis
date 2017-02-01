@@ -5,20 +5,23 @@ use std::collections::{HashMap};
 use std::io::Write;
 
 use self::uuid::Uuid;
+use store::DataStore;
 
 /// a distribution service
-pub struct Distributor<S:Write> {
+pub struct Distributor<S:Write, D:DataStore> {
     rx: Receiver<Kind<S>>, //receiver ch with data to be redistrubuted
     sx: HashMap<Uuid,S>, //local cache of streams to comm to
+    store: Option<D>,
 }
 
-impl<S:Write> Distributor<S>  {
-    pub fn new () -> (Sender<Kind<S>>, Distributor<S>) {
+impl<S:Write, D:DataStore> Distributor<S,D>  {
+    pub fn new (store: Option<D>) -> (Sender<Kind<S>>, Distributor<S,D>) {
         let (tx,rx) = channel();
         (tx, //sending channel to comm with Distributor
          Distributor {
              rx: rx,
              sx: HashMap::new(),
+             store: store,
          })
     }
 
@@ -29,24 +32,18 @@ impl<S:Write> Distributor<S>  {
             match n {
                 Kind::Broadcast(data) => {
                     for (uuid,mut stream) in self.sx.iter_mut() {
-                        if stream.write_all(&data).is_err() {
-                            dead.push(uuid.clone());
-                        }
+                        Distributor::<S,D>::write(stream,&uuid,&data,&mut dead, &self.store);
                     }
                 },
                 Kind::Select(uuid,data) => {
                     if let Some(stream) = self.sx.get_mut(&uuid) {
-                        if stream.write_all(&data).is_err() {
-                            dead.push(uuid.clone());
-                        }
+                        Distributor::<S,D>::write(stream,&uuid,&data,&mut dead, &self.store);
                     }
                 },
                 Kind::Group(mut uuids,data) => {
                     for uuid in uuids.drain(..) {
                         if let Some(stream) = self.sx.get_mut(&uuid) {
-                            if stream.write_all(&data).is_err() {
-                                dead.push(uuid.clone());
-                            }
+                            Distributor::<S,D>::write(stream,&uuid,&data,&mut dead, &self.store);
                         }
                     }
                 },
@@ -57,6 +54,22 @@ impl<S:Write> Distributor<S>  {
             // remove dead streams
             for n in dead.drain(..) {
                 self.sx.remove(&n);
+            }
+        }
+    }
+
+    // FIXME: cannot use &mut self here!
+    fn write (stream: &mut S,
+              uuid: &Uuid,
+              data: &Vec<u8>,
+              dead: &mut Vec<Uuid>,
+              store: &Option<D>) {
+        if stream.write_all(data).is_err() {
+            dead.push(uuid.clone());
+        }
+        else {
+            if let &Some(ref store) = store {
+                store.msg_store(uuid, data);
             }
         }
     }
