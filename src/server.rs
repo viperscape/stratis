@@ -19,7 +19,7 @@ use client::{Client};
 use chat::{read_text,text_as_bytes};
 use distributor::Distributor;
 use distributor::Kind as DistKind;
-use store::Store;
+use store::{DataStore,Store};
 
 #[allow(dead_code)]
 pub struct Player {
@@ -46,7 +46,7 @@ impl Server {
             clients: vec!(),
             players: HashMap::new(),
             dist_tx: dist_tx,
-            store: Store::new(),
+            store: Store::default(),
         };
 
         if let Some(ref store) = server.store {
