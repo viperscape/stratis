@@ -66,8 +66,6 @@ impl<S:Write, D:DataStore> Distributor<S,D>  {
               store: &Option<D>) {
         if stream.write_all(data).is_err() {
             dead.push(uuid.clone());
-        }
-        else {
             if let &Some(ref store) = store {
                 store.msg_store(uuid, data);
             }
