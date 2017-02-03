@@ -33,7 +33,7 @@ fn main() {
         client.register();
         client.login();
     }
-
+    
     
     let mut chat = true;
     loop {

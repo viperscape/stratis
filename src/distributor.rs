@@ -47,7 +47,18 @@ impl<S:Write, D:DataStore> Distributor<S,D>  {
                         }
                     }
                 },
-                Kind::Add(uuid,stream) => { self.sx.insert(uuid,stream); }
+                Kind::Add(uuid,stream) => {
+                    self.sx.insert(uuid,stream);
+
+                    // retrieve cached messages while away
+                    if let Some(ref store) = self.store {
+                        for msg in store.msg_get(&uuid) {
+                            let stream = self.sx.get_mut(&uuid).unwrap();
+                            Distributor::<S,D>::write(stream,&uuid, &msg,
+                                                      &mut dead, &self.store);
+                        }
+                    }
+                }
                 Kind::Remove(uuid) => { self.sx.remove(&uuid); }
             }
 
@@ -67,7 +78,7 @@ impl<S:Write, D:DataStore> Distributor<S,D>  {
         if stream.write_all(data).is_err() {
             dead.push(uuid.clone());
             if let &Some(ref store) = store {
-                store.msg_store(uuid, data);
+                store.msg_put(uuid, data);
             }
         }
     }

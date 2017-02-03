@@ -166,7 +166,7 @@ impl Server {
                     }
                     
                     println!("login:{:?}",c.id);
-                    println!("total clients:{:?}",server.clients.len());
+                    println!("total clients:{:?}",server.players.len());
                 }
                 else {
                     panic!("client invalid login {:?}", c)

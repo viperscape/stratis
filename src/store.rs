@@ -9,8 +9,8 @@ pub trait DataStore: Sized {
     fn default () -> Option<Self>;
     fn get_clients (&self) -> Vec<Client>;
     fn add_client (&self, c: &Client) -> bool;
-    fn msg_store (&self, uuid: &Uuid, data: &Vec<u8>) -> bool;
-    fn get_msg (&self, uuid: &Uuid) -> Vec<Vec<u8>>;
+    fn msg_put (&self, uuid: &Uuid, data: &Vec<u8>) -> bool;
+    fn msg_get (&self, uuid: &Uuid) -> Vec<Vec<u8>>;
 }
 
 #[derive(Debug)]
@@ -46,11 +46,11 @@ impl DataStore for Store {
                           &[&c.id, &c.key]).is_ok()
     }
 
-    fn msg_store (&self, uuid: &Uuid, data: &Vec<u8>) -> bool {
+    fn msg_put (&self, uuid: &Uuid, data: &Vec<u8>) -> bool {
         self.conn.execute("INSERT INTO msg (uuid, msg) VALUES ($1, $2)",
                           &[uuid, data]).is_ok()
     }
-    fn get_msg (&self, uuid: &Uuid) -> Vec<Vec<u8>> {
+    fn msg_get (&self, uuid: &Uuid) -> Vec<Vec<u8>> {
         let mut msgs = vec!();
         if let Ok(r) = self.conn.query("select msg from msg where uuid = $1",&[uuid]) {
             for msg in r.iter() {
