@@ -45,7 +45,7 @@ impl Server {
         };
 
         if let Some(ref store) = server.store {
-            server.clients = store.get_clients();
+            server.clients = store.clients_get();
         }
         
         let server = Arc::new(Mutex::new(server));
@@ -110,7 +110,7 @@ impl Server {
             }
 
             if let Some(ref store) = server.store {
-                let r = store.add_client(&c);
+                let r = store.client_put(&c);
                 println!("registered ({:?}):{:?}",r, c.id);
 
                 let mut nick = "player_".to_string();

@@ -7,8 +7,8 @@ use self::uuid::Uuid;
 
 pub trait DataStore: Sized {
     fn default () -> Option<Self>;
-    fn get_clients (&self) -> Vec<Client>;
-    fn add_client (&self, c: &Client) -> bool;
+    fn clients_get (&self) -> Vec<Client>;
+    fn client_put (&self, c: &Client) -> bool;
     fn msg_put (&self, uuid: &Uuid, data: &Vec<u8>) -> bool;
     fn msg_get (&self, uuid: &Uuid) -> Vec<Vec<u8>>;
     fn player_get (&self, uuid: &Uuid) -> Option<String>;
@@ -29,7 +29,7 @@ impl DataStore for Store {
         else { return None }
     }
 
-    fn get_clients (&self) -> Vec<Client> {
+    fn clients_get (&self) -> Vec<Client> {
         let mut clients = vec!();
         if let Ok(r) = self.conn.query("select * from clients",&[]) {
             for n in r.iter() {
@@ -43,7 +43,7 @@ impl DataStore for Store {
         clients
     }
 
-    fn add_client (&self, c: &Client) -> bool {
+    fn client_put (&self, c: &Client) -> bool {
         self.conn.execute("INSERT INTO clients (uuid, key) VALUES ($1, $2)",
                           &[&c.id, &c.key]).is_ok()
     }
