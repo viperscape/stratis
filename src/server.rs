@@ -20,13 +20,7 @@ use chat::{read_text,text_as_bytes};
 use distributor::Distributor;
 use distributor::Kind as DistKind;
 use store::{DataStore,Store};
-
-#[allow(dead_code)]
-pub struct Player {
-    client_idx: usize, //this is dynamic in the sense that it may be different on intial run
-}
-
-
+use player::Player;
 
 pub struct Server {
     clients: Vec<Client>, // this always grows

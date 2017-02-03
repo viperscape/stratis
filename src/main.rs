@@ -7,6 +7,7 @@ mod server;
 mod distributor;
 mod chat;
 mod store;
+mod player;
 
 use client::Client;
 
