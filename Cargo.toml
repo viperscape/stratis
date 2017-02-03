@@ -2,6 +2,7 @@
 name = "stratis"
 version = "0.1.0"
 authors = ["viperscape <chrisfgill@gmail.com>"]
+license = "Apache-2.0"
 
 [dependencies]
 hmac-sha1 = "^0.1"
