@@ -115,6 +115,7 @@ impl Server {
 
                 let mut nick = "player_".to_string();
                 nick.push_str(&rand::random::<u16>().to_string());
+                println!("nick:{:?}",nick);
                 store.player_put(&c.id,nick);
             }
             
