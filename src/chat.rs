@@ -30,6 +30,7 @@ pub fn read_text (mut s: &mut TcpStream,) -> Option<String> {
 }
 
 #[allow(unused_must_use)]
+/// defaults to CHAT opcode
 pub fn write_text (mut s: &mut TcpStream, text: &str) {
     let (data, bytes) = text_as_bytes(text);
     s.write_all(&data);

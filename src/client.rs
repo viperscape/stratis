@@ -133,8 +133,16 @@ impl Client {
                 match cmd[0] {
                     2 => {
                         if let Some(text) = read_text(&mut s) {
-                            println!("chat-server:{:?}",text.trim());
+                            let mut id = [0u8;16];
+                            if let Ok(_) = s.read_exact(&mut id) {
+                                println!("{:?} says: {:?}",
+                                         Uuid::from_bytes(&id),
+                                         text.trim());
+                            }
                         }
+                    },
+                    3 => { //TODO: handle nick updates
+
                     },
                     _ => {
                         println!("unknown command {:?}",cmd)

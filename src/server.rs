@@ -86,7 +86,12 @@ impl Server {
                         if client_idx.is_some() {
                             match cmd[0] {
                                 2 => { //chat
-                                    Server::chat(&mut server, &mut s);
+                                    Server::chat(&mut server, &mut s,
+                                                 client_idx.unwrap());
+                                },
+                                3 => { //nick
+                                    Server::nick(&mut server, &mut s,
+                                                 client_idx.unwrap());
                                 },
                                 _ => panic!("unknown cmd:{:?}",cmd)
                             }
@@ -126,7 +131,8 @@ impl Server {
 
     #[allow(unused_must_use)]
     fn chat (server: &mut Arc<Mutex<Server>>,
-             mut s: &mut TcpStream,) {
+             mut s: &mut TcpStream,
+             client_idx: usize) {
         
         if let Some(text) = read_text(s) {
             println!("chat-client:{:?}",text.trim());
@@ -134,8 +140,32 @@ impl Server {
             //broadcast
             let (mut data, bytes) = text_as_bytes(&text);
             data.extend_from_slice(bytes);
+
+            
+            let server = server.lock().unwrap();
+            let uuid = server.clients[client_idx].id;
+            data.extend_from_slice(uuid.as_bytes()); //refer to uuid
+            
+            server.dist_tx.send(DistKind::Broadcast(data));
+        }
+    }
+
+    #[allow(unused_must_use)]
+    fn nick (server: &mut Arc<Mutex<Server>>,
+             mut s: &mut TcpStream,
+             client_idx: usize) {
+        
+        if let Some(text) = read_text(s) {            
+            //broadcast
+            let (mut data, bytes) = text_as_bytes(&text);
+            data[0] = 3; //change opcode to nick
+            data.extend_from_slice(bytes);
+            
                 
             let server = server.lock().unwrap();
+            let uuid = server.clients[client_idx].id;
+            data.extend_from_slice(uuid.as_bytes()); //refer to uuid
+            
             server.dist_tx.send(DistKind::Broadcast(data));
         }
     }
