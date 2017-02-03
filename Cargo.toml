@@ -9,3 +9,4 @@ hmac-sha1 = "^0.1"
 uuid = { version = "^0.3", features = ["v4"]}
 byteorder = "1"
 postgres = { version = "0.13.5", features = ["with-uuid"]}
+rand = "0.3.15"

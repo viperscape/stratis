@@ -11,6 +11,7 @@ use std::io::prelude::*;
 extern crate hmacsha1;
 extern crate uuid;
 extern crate byteorder;
+extern crate rand;
 
 use self::uuid::Uuid;
 
@@ -79,21 +80,7 @@ impl Server {
                         client_idx = Server::login(&mut server, &mut s, m);
                     },
                     1 => { //register
-                        if let Some(c) = Client::load(&mut s) {
-                            let mut server = server.lock().unwrap();
-                            
-                            for n in server.clients.iter() {
-                                if n.id == c.id { continue }
-                            }
-
-                            if let Some(ref store) = server.store {
-                                let r = store.add_client(&c);
-                                println!("registered ({:?}):{:?}",r, c.id);
-                            }
-                            
-                            
-                            server.clients.push(c);
-                        }
+                        Server::register(&mut server, &mut s);
                     },
                     _ => {
                         if client_idx.is_some() {
@@ -111,6 +98,29 @@ impl Server {
         }
 
         println!("client dropped");
+    }
+
+    fn register (server: &mut Arc<Mutex<Server>>,
+                 mut s: &mut TcpStream,) {
+        if let Some(c) = Client::load(&mut s) {
+            let mut server = server.lock().unwrap();
+            
+            for n in server.clients.iter() {
+                if n.id == c.id { continue }
+            }
+
+            if let Some(ref store) = server.store {
+                let r = store.add_client(&c);
+                println!("registered ({:?}):{:?}",r, c.id);
+
+                let mut nick = "player_".to_string();
+                nick.push_str(&rand::random::<u16>().to_string());
+                store.player_put(&c.id,nick);
+            }
+            
+            
+            server.clients.push(c);
+        }
     }
 
     #[allow(unused_must_use)]
@@ -151,11 +161,21 @@ impl Server {
             if let Some(key) = reg_key {
                 let hm = hmacsha1::hmac_sha1(&key, m.as_bytes());
                 if c.key == hm {
-                    server.players.insert(c.id,
-                                          Player {client_idx:client_idx.unwrap()});
+                    let mut nick = None;
+                    if let Some(ref store) = server.store {
+                        if let Some(n) = store.player_get(&c.id) {
+                            nick = Some(n);
+                        }
+                    }
+                    if let Some(nick) = nick {
+                        server.players.insert(c.id,
+                                              Player { client_idx:client_idx.unwrap(),
+                                                       nick: nick });
+                    }
+                    else { panic!("{:?} missing nick", c.id) }
+                    
 
                     if let Ok(stmp) = s.try_clone() {
-                        //n.stream = Some(Arc::new(Mutex::new(stmp)));
                         server.dist_tx.send(DistKind::Add(c.id,stmp));
                     }
                     

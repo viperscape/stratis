@@ -11,6 +11,8 @@ pub trait DataStore: Sized {
     fn add_client (&self, c: &Client) -> bool;
     fn msg_put (&self, uuid: &Uuid, data: &Vec<u8>) -> bool;
     fn msg_get (&self, uuid: &Uuid) -> Vec<Vec<u8>>;
+    fn player_get (&self, uuid: &Uuid) -> Option<String>;
+    fn player_put (&self, uuid: &Uuid, nick: String) -> bool;
 }
 
 #[derive(Debug)]
@@ -59,5 +61,22 @@ impl DataStore for Store {
         }
 
         msgs
+    }
+
+    fn player_get (&self, uuid: &Uuid) -> Option<String> {
+        if let Ok(r) = self.conn.query("select nick from players where uuid = $1 limit 1",&[uuid]) {
+            if let Some(r) = r.iter().next() {
+                return r.get(0)
+            }
+        }
+
+        None
+    }
+    fn player_put (&self, uuid: &Uuid, nick: String) -> bool {
+        let r = self.conn.execute("INSERT INTO players (uuid, nick) VALUES ($1, $2)",
+                                  &[uuid, &nick]);
+        println!("{:?}",r);
+
+        r.is_ok()
     }
 }
