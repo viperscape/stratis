@@ -12,11 +12,20 @@ use std::process::{Command,Child};
 
 /// watches the debug build, restarts server on build
 pub fn watcher (matches: &getopts::Matches) {
-    if matches.opt_present("w") && matches.opt_present("d") {
-        
-        let stratis_path = env::var("STRATIS_DEBUG").expect("no \'STRATIS_DEBUG\' path found in environment vars");
-        let stratis_dest = stratis_path.clone()+"\\PAN_stratis.exe";
-        
+    let stratis_path;
+    let stratis_dest;
+    
+    if matches.opt_present("d") {
+        stratis_path = env::var("STRATIS_DEBUG").expect("no \'STRATIS_DEBUG\' path found in environment vars");
+        stratis_dest = stratis_path.clone()+"\\PAN_stratis.exe";
+    }
+    else {
+        stratis_path = env::var("STRATIS_RELEASE").expect("no \'STRATIS_RELEASE\' path found in environment vars");
+        stratis_dest = stratis_path.clone()+"\\PAN_stratis.exe";
+    }
+
+    
+    if matches.opt_present("w") {
         let (tx, rx) = channel();
         let mut w = self::notify::watcher(tx,Duration::from_secs(3)).expect("unable to create filesys watcher");
 
