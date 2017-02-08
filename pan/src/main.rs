@@ -3,6 +3,7 @@ use getopts::Options;
 use std::env;
 
 mod postgres;
+mod lifecycle;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -13,11 +14,16 @@ fn main() {
     opts.optflag("i",  "init", "Init new SQL Database");
     opts.optopt("u", "user", "SQL user", "USER");
     opts.optopt("p", "pass", "SQL password", "PASSWORD");
+
+    opts.optflag("w",  "watch", "Watch and rerun stratis builds");
+    opts.optflag("d", "debug", "Specify debug stratis build");
+    
     
     let matches = match opts.parse(&args[1..]) {
         Ok(m) => { m }
         Err(f) => { panic!(f.to_string()) }
     };
 
-    postgres::build(matches);
+    postgres::build(&matches);
+    lifecycle::watcher(&matches);
 }

@@ -4,7 +4,7 @@ extern crate postgres;
 use self::postgres::{Connection, TlsMode};
 
 
-pub fn build (matches: getopts::Matches) {
+pub fn build (matches: &getopts::Matches) {
     if matches.opt_present("i") {
         let user = matches.opt_str("u").unwrap_or("postgres".to_owned());
         let pass = matches.opt_str("p").expect("need password, use -p opt");
