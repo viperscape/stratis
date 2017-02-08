@@ -18,7 +18,7 @@ pub fn watcher (matches: &getopts::Matches) {
         let stratis_dest = stratis_path.clone()+"\\PAN_stratis.exe";
         
         let (tx, rx) = channel();
-        let mut w = self::notify::watcher(tx,Duration::from_secs(5)).expect("unable to create filesys watcher");
+        let mut w = self::notify::watcher(tx,Duration::from_secs(3)).expect("unable to create filesys watcher");
 
         w.watch(stratis_path.clone()+"\\stratis.exe",RecursiveMode::NonRecursive).expect("unable to watch directory");
 
@@ -33,7 +33,7 @@ pub fn watcher (matches: &getopts::Matches) {
                     if let Some(ref mut h) = spawn_handle {
                         if let Ok(_) = h.kill() {
                             println!("process-killed\n");
-                            thread::sleep(Duration::from_secs(3));
+                            thread::sleep(Duration::from_secs(1));
                             
                             if let Ok(r) = fs::copy(path,&stratis_dest) {
                                 println!("watcher-copy:{:?}",r);
