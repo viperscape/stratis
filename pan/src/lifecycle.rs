@@ -2,10 +2,11 @@ extern crate getopts;
 extern crate notify;
 
 
-use self::notify::{Watcher, RecursiveMode};
+use self::notify::{Watcher, RecursiveMode, DebouncedEvent};
 use std::sync::mpsc::channel;
 use std::time::Duration;
 use std::env;
+use std::fs;
 
 /// watches the debug build, restarts server on build
 pub fn watcher (matches: &getopts::Matches) {
@@ -16,12 +17,16 @@ pub fn watcher (matches: &getopts::Matches) {
         let (tx, rx) = channel();
         let mut w = self::notify::watcher(tx,Duration::from_secs(5)).expect("unable to create filesys watcher");
 
-        w.watch(stratis_path,RecursiveMode::NonRecursive).expect("unable to watch directory");
+        w.watch(stratis_path.clone(),RecursiveMode::NonRecursive).expect("unable to watch directory");
 
-        loop {
-            match rx.recv() {
-                Ok(event) => println!("{:?}", event),
-                Err(e) => println!("watch error: {:?}", e),
+        for n in rx.recv() {
+            match n {
+                DebouncedEvent::Write(path) => {
+                    //FIXME: this simply crashes on windows
+                    let r = fs::copy(path,stratis_path.clone()+"PAN_stratis.exe");
+                    println!("watcher-copy:{:?}",r);
+                },
+                _ => {},
             }
         }
 
