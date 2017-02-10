@@ -12,6 +12,8 @@ use std::process::{Command,Child};
 
 /// watches the debug build, restarts server on build
 pub fn watcher (matches: &getopts::Matches) {
+    if !matches.opt_present("w") { return }
+    
     let stratis_path;
     let stratis_dest;
     
@@ -25,48 +27,47 @@ pub fn watcher (matches: &getopts::Matches) {
     }
 
     
-    if matches.opt_present("w") {
-        let (tx, rx) = channel();
-        let mut w = self::notify::watcher(tx,Duration::from_secs(3)).expect("unable to create filesys watcher");
+    
+    let (tx, rx) = channel();
+    let mut w = self::notify::watcher(tx,Duration::from_secs(3)).expect("unable to create filesys watcher");
 
-        w.watch(stratis_path.clone()+"\\stratis.exe",RecursiveMode::NonRecursive).expect("unable to watch directory");
+    w.watch(stratis_path.clone()+"\\stratis.exe",RecursiveMode::NonRecursive).expect("unable to watch directory");
 
-        let mut spawn_handle: Option<Child> = None;
+    let mut spawn_handle: Option<Child> = None;
+    
+    for n in rx.iter() {
+        let mut new_spawn_handle = None;
+        println!("event: {:?}",n);
         
-        for n in rx.iter() {
-            let mut new_spawn_handle = None;
-            println!("event: {:?}",n);
-            
-            match n {
-                DebouncedEvent::Write(path) => {
-                    if let Some(ref mut h) = spawn_handle {
-                        if let Ok(_) = h.kill() {
-                            println!("process-killed\n");
-                            thread::sleep(Duration::from_secs(1));
-                            
-                            if let Ok(r) = fs::copy(path,&stratis_dest) {
-                                println!("watcher-copy:{:?}",r);
-                                new_spawn_handle = spawn(&stratis_dest);
-                            }
-                        }
-                    }
-                    else { //no child process alive?
+        match n {
+            DebouncedEvent::Write(path) => {
+                if let Some(ref mut h) = spawn_handle {
+                    if let Ok(_) = h.kill() {
+                        println!("process-killed\n");
+                        thread::sleep(Duration::from_secs(1));
+                        
                         if let Ok(r) = fs::copy(path,&stratis_dest) {
                             println!("watcher-copy:{:?}",r);
                             new_spawn_handle = spawn(&stratis_dest);
                         }
                     }
-
-                    spawn_handle = new_spawn_handle;
-                    if let Some(ref h) = spawn_handle {
-                        println!("process-spawned:{:?}\n",h.id());
+                }
+                else { //no child process alive?
+                    if let Ok(r) = fs::copy(path,&stratis_dest) {
+                        println!("watcher-copy:{:?}",r);
+                        new_spawn_handle = spawn(&stratis_dest);
                     }
-                },
-                _ => {  },
-            }
-        }
+                }
 
+                spawn_handle = new_spawn_handle;
+                if let Some(ref h) = spawn_handle {
+                    println!("process-spawned:{:?}\n",h.id());
+                }
+            },
+            _ => {  },
+        }
     }
+
 }
 
 fn spawn(path: &str) -> Option<Child> {
