@@ -5,42 +5,71 @@ extern crate byteorder;
 use self::uuid::Uuid;
 
 use std::io::prelude::*;
-//use std::io::BufReader;
+
 use std::fs::File;
 use std::net::TcpStream;
+use std::collections::HashMap;
 
 use std::thread;
 use std::sync::{Arc, Mutex};
 
-
+use player::Player;
 use chat::{read_text,write_text, text_as_bytes};
 
 
 #[derive(Debug,Clone)]
-pub struct Client {
+pub struct ClientBase {
     pub key: Vec<u8>,
     pub id: Uuid,
+}
+
+#[derive(Debug,Clone)]
+pub struct Client {
+    pub base: ClientBase,
     pub stream: Option<Arc<Mutex<TcpStream>>>,
+    pub cache: HashMap<Uuid,Player>,
 }
 
 impl Client {
+    pub fn default (key: Vec<u8>, uuid: Uuid) -> Client {
+        Client { base: ClientBase { key:key,
+                                    id:uuid, },
+                 stream: None,
+                 cache: HashMap::new() }
+    }
+    
     #[allow(unused_must_use)]
-    pub fn new (path: &str) -> Client { println!("new file");
+    pub fn new (path: &str) -> Client {
+        let mut cache: HashMap<Uuid, Player> = HashMap::new();
+        
         let id = uuid::Uuid::new_v4();
         let m = hmacsha1::hmac_sha1(uuid::Uuid::new_v4().as_bytes(),
                                     id.as_bytes());
 
         
-        let c = Client { id: id, key: From::from(&m[..]), stream: None };
+        let cb = ClientBase { id: id, key: From::from(&m[..]) };
+        let client = Client { base: cb, stream: None, cache: HashMap::new() };
 
         let f = File::create(path);
         if !f.is_ok() { panic!("cannot create client file") }
         if let Ok(mut f) = f {
-            f.write_all(&c.key);
-            f.write_all(c.id.as_bytes());
+            f.write_all(&client.base.key);
+            f.write_all(client.base.id.as_bytes());
         }
 
-        c
+        client
+    }
+
+    pub fn id (&self) -> &Uuid {
+        &self.base.id
+    }
+
+    pub fn key (&self) -> &[u8] {
+        &self.base.key[..]
+    }
+
+    pub fn key_as_ref (&self) -> &Vec<u8> {
+        &self.base.key
     }
 
     pub fn load_file (path: &str) -> Option<Client> {
@@ -58,7 +87,9 @@ impl Client {
         if let Ok(_) = s.read_exact(&mut key) {
             if let Ok(_) = s.read_exact(&mut id) {
                 if let Ok(id) = Uuid::from_bytes(&id) {
-                    return Some(Client { id:id, key: From::from(&key[..]), stream:None })
+                    return Some(Client { base: ClientBase { id:id, key: From::from(&key[..]) },
+                                         stream:None,
+                                         cache:HashMap::new() })
                 }
                 else { println!("cannot uuid file") }
             }
@@ -83,10 +114,10 @@ impl Client {
                 let mut m = [0u8;16];
                 if let Ok(_) = s.read_exact(&mut m) {
                     s.write_all(&[0]);
-                    let hm = hmacsha1::hmac_sha1(&self.key, &m);
+                    let hm = hmacsha1::hmac_sha1(&self.base.key, &m);
                     
                     s.write_all(&hm);
-                    s.write_all(self.id.as_bytes());
+                    s.write_all(self.base.id.as_bytes());
 
                     
                     thread::spawn(move || {
@@ -102,8 +133,8 @@ impl Client {
         if let Some(ref ms) = self.stream {
             if let Ok(ref mut s) = ms.lock() {
                 s.write_all(&[1]);
-                s.write_all(&self.key);
-                s.write_all(self.id.as_bytes());
+                s.write_all(&self.base.key);
+                s.write_all(self.base.id.as_bytes());
             }
         }
     }

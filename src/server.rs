@@ -107,16 +107,16 @@ impl Server {
             let mut server = server.lock().unwrap();
             
             for n in server.clients.iter() {
-                if n.id == c.id { continue }
+                if n.id() == c.id() { continue }
             }
 
             let r = server.store.client_put(&c);
-            println!("registered ({:?}):{:?}",r, c.id);
+            println!("registered ({:?}):{:?}",r, c.id());
 
             let mut nick = "player_".to_string();
             nick.push_str(&rand::random::<u16>().to_string());
             println!("nick:{:?}",nick);
-            server.store.player_put(&c.id,nick);
+            server.store.player_put(&c.id(),nick);
             
             
             server.clients.push(c);
@@ -175,9 +175,9 @@ impl Server {
 
             let mut reg_key = None;
             for n in server.clients.iter_mut() {
-                if n.id == c.id {
-                    reg_key = Some(n.key.clone());
-                    client_id = Some(c.id);
+                if n.id() == c.id() {
+                    reg_key = Some(n.key_as_ref().clone());
+                    client_id = Some(c.id().clone());
                     
                     break
                 }
@@ -185,25 +185,25 @@ impl Server {
 
             if let Some(key) = reg_key {
                 let hm = hmacsha1::hmac_sha1(&key, m.as_bytes());
-                if c.key == hm {
+                if c.key() == hm {
                     let mut nick = None;
                     
-                    if let Some(n) = server.store.player_get(&c.id) {
+                    if let Some(n) = server.store.player_get(c.id()) {
                         nick = Some(n);
                     }
                     
                     if let Some(nick) = nick {
-                        server.players.insert(c.id,
+                        server.players.insert(*c.id(),
                                               Player { nick: nick });
                     }
-                    else { panic!("{:?} missing nick", c.id) }
+                    else { panic!("{:?} missing nick", c.id()) }
                     
 
                     if let Ok(stmp) = s.try_clone() {
-                        server.dist_tx.send(DistKind::Add(c.id,stmp));
+                        server.dist_tx.send(DistKind::Add(*c.id(),stmp));
                     }
                     
-                    println!("login:{:?}",c.id);
+                    println!("login:{:?}",c.id());
                     println!("total clients:{:?}",server.players.len());
                 }
                 else {

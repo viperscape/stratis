@@ -2,7 +2,7 @@ extern crate postgres;
 extern crate uuid;
 
 use self::postgres::{Connection, TlsMode};
-use client::Client;
+use client::{Client};
 use self::uuid::Uuid;
 
 pub trait DataStore: Sized {
@@ -31,10 +31,7 @@ impl DataStore for Store {
         let mut clients = vec!();
         if let Ok(r) = self.conn.query("select * from clients",&[]) {
             for n in r.iter() {
-                clients.push(
-                    Client { key:n.get(1),
-                             id:n.get(0),
-                             stream: None, });
+                clients.push(Client::default(n.get(1),n.get(0)));
             }
         }
 
@@ -43,7 +40,7 @@ impl DataStore for Store {
 
     fn client_put (&self, c: &Client) -> bool {
         self.conn.execute("INSERT INTO clients (uuid, key) VALUES ($1, $2)",
-                          &[&c.id, &c.key]).is_ok()
+                          &[c.id(),&c.key_as_ref()]).is_ok()
     }
 
     fn msg_put (&self, uuid: &Uuid, data: &Vec<u8>) -> bool {
