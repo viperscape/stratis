@@ -40,9 +40,7 @@ impl Client {
     }
     
     #[allow(unused_must_use)]
-    pub fn new (path: &str) -> Client {
-        let mut cache: HashMap<Uuid, Player> = HashMap::new();
-        
+    pub fn new (path: &str) -> Client {        
         let id = uuid::Uuid::new_v4();
         let m = hmacsha1::hmac_sha1(uuid::Uuid::new_v4().as_bytes(),
                                     id.as_bytes());
@@ -179,7 +177,7 @@ impl Client {
         loop {
             if let Ok(_) = s.read_exact(&mut cmd) {
                 match cmd[0] {
-                    2 => {
+                    2 => { // chat
                         if let Some(text) = read_text(&mut s) {
                             let mut id = [0u8;16];
                             if let Ok(_) = s.read_exact(&mut id) {
@@ -189,13 +187,20 @@ impl Client {
                             }
                         }
                     },
-                    3 => { //TODO: handle nick updates
+                    3 => {
+                        // nick updates
+                        //NOTE: this is how we will update player list for region
+
                         if let Some(text) = read_text(&mut s) {
                             let mut id = [0u8;16];
                             if let Ok(_) = s.read_exact(&mut id) {
-                                println!("nick_change:{:?}  {:?}",
-                                         Uuid::from_bytes(&id),
-                                         text.trim());
+                                if let Ok(uuid) = Uuid::from_bytes(&id) {
+                                    let nick = text.trim();
+                                    println!("nick_change:{:?}  {:?}",
+                                             uuid, nick);
+
+                                    self.cache.insert(uuid, Player { nick: nick.to_owned() });
+                                }
                             }
                         }
                     },
