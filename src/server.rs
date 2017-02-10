@@ -69,27 +69,25 @@ impl Server {
         let m = uuid::Uuid::new_v4();
         s.write_all(m.as_bytes());
 
-        let mut client_idx = None;
+        let mut client_id: Option<Uuid> = None;
         
         loop {
             if let Ok(_) = s.read_exact(&mut cmd) {
                 match cmd[0] {
                     0 => { //login
-                        client_idx = Server::login(&mut server, &mut s, m);
+                        client_id = Server::login(&mut server, &mut s, m);
                     },
                     1 => { //register
                         Server::register(&mut server, &mut s);
                     },
                     _ => {
-                        if client_idx.is_some() {
+                        if let Some(uuid) = client_id {
                             match cmd[0] {
                                 2 => { //chat
-                                    Server::chat(&mut server, &mut s,
-                                                 client_idx.unwrap());
+                                    Server::chat(&mut server, &mut s, uuid);
                                 },
                                 3 => { //nick
-                                    Server::nick(&mut server, &mut s,
-                                                 client_idx.unwrap());
+                                    Server::nick(&mut server, &mut s, uuid);
                                 },
                                 _ => panic!("unknown cmd:{:?}",cmd)
                             }
@@ -128,7 +126,7 @@ impl Server {
     #[allow(unused_must_use)]
     fn chat (server: &mut Arc<Mutex<Server>>,
              mut s: &mut TcpStream,
-             client_idx: usize) {
+             uuid: Uuid) {
         
         if let Some(text) = read_text(s) {
             println!("chat-client:{:?}",text.trim());
@@ -139,7 +137,6 @@ impl Server {
 
             
             let server = server.lock().unwrap();
-            let uuid = server.clients[client_idx].id;
             data.extend_from_slice(uuid.as_bytes()); //refer to uuid
             
             server.dist_tx.send(DistKind::Broadcast(data));
@@ -149,7 +146,7 @@ impl Server {
     #[allow(unused_must_use)]
     fn nick (server: &mut Arc<Mutex<Server>>,
              mut s: &mut TcpStream,
-             client_idx: usize) {
+             uuid: Uuid) {
         
         if let Some(text) = read_text(s) {            
             //broadcast
@@ -159,27 +156,28 @@ impl Server {
             
                 
             let server = server.lock().unwrap();
-            let uuid = server.clients[client_idx].id;
             data.extend_from_slice(uuid.as_bytes()); //refer to uuid
             
             server.dist_tx.send(DistKind::Broadcast(data));
+
+            println!("nick_change:{:?}  {:?}",uuid,text);
         }
     }
 
     #[allow(unused_must_use)]
     fn login (server: &mut Arc<Mutex<Server>>,
               mut s: &mut TcpStream,
-              m: Uuid) -> Option<usize> {
-        let mut client_idx = None;
+              m: Uuid) -> Option<Uuid> {
+        let mut client_id = None;
         
         if let Some(c) = Client::load(&mut s) {
             let mut server = server.lock().unwrap();
 
             let mut reg_key = None;
-            for (i,n) in server.clients.iter_mut().enumerate() {
+            for n in server.clients.iter_mut() {
                 if n.id == c.id {
                     reg_key = Some(n.key.clone());
-                    client_idx = Some(i);
+                    client_id = Some(c.id);
                     
                     break
                 }
@@ -196,8 +194,7 @@ impl Server {
                     
                     if let Some(nick) = nick {
                         server.players.insert(c.id,
-                                              Player { client_idx:client_idx.unwrap(),
-                                                       nick: nick });
+                                              Player { nick: nick });
                     }
                     else { panic!("{:?} missing nick", c.id) }
                     
@@ -217,6 +214,6 @@ impl Server {
             else { panic!("client unregistered {:?}", c) }
         }
 
-       client_idx
+       client_id
     }
 }

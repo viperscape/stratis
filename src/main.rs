@@ -49,7 +49,13 @@ fn main() {
                     else {
                         match cmd {
                             "exit" => { break },
-                            _ => { }
+                            _ => {
+                                let cmds: Vec<&str> = cmd.split(' ').collect();
+                                if cmds[0] == "nick" {
+                                    println!("nick:{:?}",cmds[1]);
+                                    client.nick(cmds[1]);
+                                }
+                            }
                         }
                     }
                 },

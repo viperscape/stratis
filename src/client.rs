@@ -13,7 +13,7 @@ use std::thread;
 use std::sync::{Arc, Mutex};
 
 
-use chat::{read_text,write_text};
+use chat::{read_text,write_text, text_as_bytes};
 
 
 #[derive(Debug,Clone)]
@@ -66,7 +66,8 @@ impl Client {
 
         None
     }
-    
+
+    #[allow(unused_must_use)]
     pub fn connect (&mut self, server: &str)  {
         if let Ok(s) = TcpStream::connect(server) {
             self.stream = Some(Arc::new(Mutex::new(s)));
@@ -116,6 +117,20 @@ impl Client {
         }
     }
 
+    #[allow(unused_must_use)]
+    pub fn nick (&mut self, nick: &str) {
+        if let Some(ref ms) = self.stream {
+            if let Ok(ref mut s) = ms.lock() {
+                let (mut data, bytes) = text_as_bytes(nick);
+                data[0] = 3; // specify nick route
+
+                s.write_all(&data);
+                s.write_all(bytes);
+            }
+        }
+    }
+
+    
     fn handler (&mut self) {
         let mut cmd = [0u8;1];
         let mut s; // NOTE: this should be read from only!
@@ -142,7 +157,14 @@ impl Client {
                         }
                     },
                     3 => { //TODO: handle nick updates
-
+                        if let Some(text) = read_text(&mut s) {
+                            let mut id = [0u8;16];
+                            if let Ok(_) = s.read_exact(&mut id) {
+                                println!("nick_change:{:?}  {:?}",
+                                         Uuid::from_bytes(&id),
+                                         text.trim());
+                            }
+                        }
                     },
                     _ => {
                         println!("unknown command {:?}",cmd)
