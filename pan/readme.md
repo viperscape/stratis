@@ -14,8 +14,7 @@ build database using postgres username and password:
 ##### lifecycle management
 
 In order to manage the STRATIS server, Environment Variable must first be present:  
-```STRATIS_DEBUG``` with a value of the folder where the stratis executable lives,
-which is likely ```~/stratis/target/debug/``` or ```%HOME%/stratis/target/debug/```
+```STRATIS``` with a value of the folder where the stratis source is
 
 to run the watcher for the debug build:  
 ```pan -wd```

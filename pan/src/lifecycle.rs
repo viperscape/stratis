@@ -14,15 +14,15 @@ use std::process::{Command,Child};
 pub fn watcher (matches: &getopts::Matches) {
     if !matches.opt_present("w") { return }
     
-    let stratis_path;
+    let mut stratis_path = env::var("STRATIS").expect("no \'STRATIS\' path found in environment vars");
     let stratis_dest;
     
     if matches.opt_present("d") {
-        stratis_path = env::var("STRATIS_DEBUG").expect("no \'STRATIS_DEBUG\' path found in environment vars");
-        stratis_dest = stratis_path.clone()+"\\PAN_stratis.exe";
+        stratis_path.push_str("\\target\\debug\\");
+        stratis_dest = stratis_path.clone()+"PAN_stratis.exe";
     }
     else {
-        stratis_path = env::var("STRATIS_RELEASE").expect("no \'STRATIS_RELEASE\' path found in environment vars");
+        stratis_path.push_str("\\target\\release\\");
         stratis_dest = stratis_path.clone()+"\\PAN_stratis.exe";
     }
 
