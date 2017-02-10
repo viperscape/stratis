@@ -16,7 +16,7 @@ extern crate rand;
 use self::uuid::Uuid;
 
 
-use client::{Client};
+use client::{Client,ClientBase};
 use chat::{read_text,text_as_bytes};
 use distributor::Distributor;
 use distributor::Kind as DistKind;
@@ -24,7 +24,7 @@ use store::{DataStore,Store};
 use player::Player;
 
 pub struct Server {
-    clients: Vec<Client>, // this always grows
+    clients: Vec<ClientBase>, // this always grows
     players: HashMap<Uuid, Player>,
     pub dist_tx: Sender<DistKind<TcpStream>>,
     store: Store,
@@ -107,10 +107,10 @@ impl Server {
             let mut server = server.lock().unwrap();
             
             for n in server.clients.iter() {
-                if n.id() == c.id() { continue }
+                if &n.id == c.id() { continue }
             }
 
-            let r = server.store.client_put(&c);
+            let r = server.store.client_put(&c.base);
             println!("registered ({:?}):{:?}",r, c.id());
 
             let mut nick = "player_".to_string();
@@ -119,7 +119,7 @@ impl Server {
             server.store.player_put(&c.id(),nick);
             
             
-            server.clients.push(c);
+            server.clients.push(c.base);
         }
     }
 
@@ -175,8 +175,8 @@ impl Server {
 
             let mut reg_key = None;
             for n in server.clients.iter_mut() {
-                if n.id() == c.id() {
-                    reg_key = Some(n.key_as_ref().clone());
+                if &n.id == c.id() {
+                    reg_key = Some(n.key.clone());
                     client_id = Some(c.id().clone());
                     
                     break

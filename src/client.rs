@@ -31,6 +31,7 @@ pub struct Client {
 }
 
 impl Client {
+    #[allow(dead_code)]
     pub fn default (key: Vec<u8>, uuid: Uuid) -> Client {
         Client { base: ClientBase { key:key,
                                     id:uuid, },
@@ -68,6 +69,7 @@ impl Client {
         &self.base.key[..]
     }
 
+    #[allow(dead_code)]
     pub fn key_as_ref (&self) -> &Vec<u8> {
         &self.base.key
     }

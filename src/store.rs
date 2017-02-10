@@ -2,13 +2,13 @@ extern crate postgres;
 extern crate uuid;
 
 use self::postgres::{Connection, TlsMode};
-use client::{Client};
+use client::{ClientBase};
 use self::uuid::Uuid;
 
 pub trait DataStore: Sized {
     fn default () -> Self;
-    fn clients_get (&self) -> Vec<Client>;
-    fn client_put (&self, c: &Client) -> bool;
+    fn clients_get (&self) -> Vec<ClientBase>;
+    fn client_put (&self, c: &ClientBase) -> bool;
     fn msg_put (&self, uuid: &Uuid, data: &Vec<u8>) -> bool;
     fn msg_get (&self, uuid: &Uuid) -> Vec<Vec<u8>>;
     fn player_get (&self, uuid: &Uuid) -> Option<String>;
@@ -27,20 +27,20 @@ impl DataStore for Store {
         Store { conn: conn }
     }
 
-    fn clients_get (&self) -> Vec<Client> {
+    fn clients_get (&self) -> Vec<ClientBase> {
         let mut clients = vec!();
         if let Ok(r) = self.conn.query("select * from clients",&[]) {
             for n in r.iter() {
-                clients.push(Client::default(n.get(1),n.get(0)));
+                clients.push(ClientBase{key:n.get(1),id:n.get(0)});
             }
         }
 
         clients
     }
 
-    fn client_put (&self, c: &Client) -> bool {
+    fn client_put (&self, c: &ClientBase) -> bool {
         self.conn.execute("INSERT INTO clients (uuid, key) VALUES ($1, $2)",
-                          &[c.id(),&c.key_as_ref()]).is_ok()
+                          &[&c.id,&c.key]).is_ok()
     }
 
     fn msg_put (&self, uuid: &Uuid, data: &Vec<u8>) -> bool {
