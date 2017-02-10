@@ -11,11 +11,11 @@ use store::DataStore;
 pub struct Distributor<S:Write, D:DataStore> {
     rx: Receiver<Kind<S>>, //receiver ch with data to be redistrubuted
     sx: HashMap<Uuid,S>, //local cache of streams to comm to
-    store: Option<D>,
+    store: D,
 }
 
 impl<S:Write, D:DataStore> Distributor<S,D>  {
-    pub fn new (store: Option<D>) -> (Sender<Kind<S>>, Distributor<S,D>) {
+    pub fn new (store: D) -> (Sender<Kind<S>>, Distributor<S,D>) {
         let (tx,rx) = channel();
         (tx, //sending channel to comm with Distributor
          Distributor {
@@ -51,12 +51,10 @@ impl<S:Write, D:DataStore> Distributor<S,D>  {
                     self.sx.insert(uuid,stream);
 
                     // retrieve cached messages while away
-                    if let Some(ref store) = self.store {
-                        for msg in store.msg_get(&uuid) {
-                            let stream = self.sx.get_mut(&uuid).unwrap();
-                            Distributor::<S,D>::write(stream,&uuid, &msg,
-                                                      &mut dead, &self.store);
-                        }
+                    for msg in self.store.msg_get(&uuid) {
+                        let stream = self.sx.get_mut(&uuid).unwrap();
+                        Distributor::<S,D>::write(stream,&uuid, &msg,
+                                                  &mut dead, &self.store);
                     }
                 }
                 Kind::Remove(uuid) => { self.sx.remove(&uuid); }
@@ -74,12 +72,10 @@ impl<S:Write, D:DataStore> Distributor<S,D>  {
               uuid: &Uuid,
               data: &Vec<u8>,
               dead: &mut Vec<Uuid>,
-              store: &Option<D>) {
+              store: &D) {
         if stream.write_all(data).is_err() {
             dead.push(uuid.clone());
-            if let &Some(ref store) = store {
-                store.msg_put(uuid, data);
-            }
+            store.msg_put(uuid, data);
         }
     }
 }

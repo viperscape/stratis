@@ -27,7 +27,7 @@ pub struct Server {
     clients: Vec<Client>, // this always grows
     players: HashMap<Uuid, Player>,
     pub dist_tx: Sender<DistKind<TcpStream>>,
-    store: Option<Store>,
+    store: Store,
 }
 
 impl Server {
@@ -44,9 +44,7 @@ impl Server {
             store: Store::default(),
         };
 
-        if let Some(ref store) = server.store {
-            server.clients = store.clients_get();
-        }
+        server.clients = server.store.clients_get();
         
         let server = Arc::new(Mutex::new(server));
 
@@ -114,15 +112,13 @@ impl Server {
                 if n.id == c.id { continue }
             }
 
-            if let Some(ref store) = server.store {
-                let r = store.client_put(&c);
-                println!("registered ({:?}):{:?}",r, c.id);
+            let r = server.store.client_put(&c);
+            println!("registered ({:?}):{:?}",r, c.id);
 
-                let mut nick = "player_".to_string();
-                nick.push_str(&rand::random::<u16>().to_string());
-                println!("nick:{:?}",nick);
-                store.player_put(&c.id,nick);
-            }
+            let mut nick = "player_".to_string();
+            nick.push_str(&rand::random::<u16>().to_string());
+            println!("nick:{:?}",nick);
+            server.store.player_put(&c.id,nick);
             
             
             server.clients.push(c);
@@ -193,11 +189,11 @@ impl Server {
                 let hm = hmacsha1::hmac_sha1(&key, m.as_bytes());
                 if c.key == hm {
                     let mut nick = None;
-                    if let Some(ref store) = server.store {
-                        if let Some(n) = store.player_get(&c.id) {
-                            nick = Some(n);
-                        }
+                    
+                    if let Some(n) = server.store.player_get(&c.id) {
+                        nick = Some(n);
                     }
+                    
                     if let Some(nick) = nick {
                         server.players.insert(c.id,
                                               Player { client_idx:client_idx.unwrap(),

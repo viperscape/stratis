@@ -6,7 +6,7 @@ use client::Client;
 use self::uuid::Uuid;
 
 pub trait DataStore: Sized {
-    fn default () -> Option<Self>;
+    fn default () -> Self;
     fn clients_get (&self) -> Vec<Client>;
     fn client_put (&self, c: &Client) -> bool;
     fn msg_put (&self, uuid: &Uuid, data: &Vec<u8>) -> bool;
@@ -21,12 +21,10 @@ pub struct Store {
 }
 
 impl DataStore for Store {
-    fn default () -> Option<Store> {
-        if let Ok(conn) = Connection::connect("postgres://stratis:stratis@localhost",
-                                              TlsMode::None) {
-            return Some(Store{ conn: conn })
-        }
-        else { return None }
+    fn default () -> Store {
+        let conn = Connection::connect("postgres://stratis:stratis@localhost",
+                                       TlsMode::None).expect("unable to connect to postgres");
+        Store { conn: conn }
     }
 
     fn clients_get (&self) -> Vec<Client> {
