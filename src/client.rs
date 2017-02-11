@@ -181,9 +181,11 @@ impl Client {
                         if let Some(text) = read_text(&mut s) {
                             let mut id = [0u8;16];
                             if let Ok(_) = s.read_exact(&mut id) {
-                                println!("{:?} says: {:?}",
-                                         Uuid::from_bytes(&id),
-                                         text.trim());
+                                if let Ok(uuid) = Uuid::from_bytes(&id) {
+                                    println!("{:?} says: {:?}",
+                                             self.cache.get(&uuid),
+                                             text.trim());
+                                }
                             }
                         }
                     },

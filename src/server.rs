@@ -76,6 +76,9 @@ impl Server {
                 match cmd[0] {
                     0 => { //login
                         client_id = Server::login(&mut server, &mut s, m);
+                        if let Some(uuid) = client_id {
+                            Server::send_nicks(&mut server, uuid);
+                        }
                     },
                     1 => { //register
                         Server::register(&mut server, &mut s);
@@ -215,5 +218,24 @@ impl Server {
         }
 
        client_id
+    }
+
+    #[allow(unused_must_use)]
+    //NOTE: this is very innefficient, and hogs the mutex
+    //TODO: rework state updates entirely
+    fn send_nicks (server: &mut Arc<Mutex<Server>>,
+                   uuid: Uuid)  {
+        let server = server.lock().unwrap();
+        
+        for (ref pid,player) in server.players.iter() {
+            let (mut data, bytes) = text_as_bytes(&player.nick);
+            data[0] = 3; // specify nick route
+            
+            data.extend_from_slice(bytes);
+            data.extend_from_slice(pid.as_bytes()); //refer to uuid
+            
+            
+            server.dist_tx.send(DistKind::Select(uuid,data));
+        }
     }
 }
