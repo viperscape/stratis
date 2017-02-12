@@ -2,5 +2,5 @@
 
 create table if not exists players (
     uuid UUID Primary Key,
-    nick text
+    nick text UNIQUE
     )
