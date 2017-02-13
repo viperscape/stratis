@@ -26,7 +26,7 @@ use player::Player;
 pub struct Server {
     clients: Vec<ClientBase>, // this always grows
     players: HashMap<Uuid, Player>,
-    pub dist_tx: Sender<DistKind<TcpStream>>,
+    dist: Sender<DistKind<TcpStream>>,
     store: Store,
 }
 
@@ -34,13 +34,13 @@ impl Server {
     pub fn new(ip: &str) {
         let listener = TcpListener::bind(ip).unwrap();
         
-        let (dist_tx,mut dist) = Distributor::new(Store::default());
-        thread::spawn(move || dist.run());
+        let (dist_tx, mut distributor) = Distributor::new(Store::default());
+        thread::spawn(move || distributor.run());
         
         let mut server = Server {
             clients: vec!(),
             players: HashMap::new(),
-            dist_tx: dist_tx,
+            dist: dist_tx,
             store: Store::default(),
         };
 
@@ -142,7 +142,7 @@ impl Server {
             let server = server.lock().unwrap();
             data.extend_from_slice(uuid.as_bytes()); //refer to uuid
             
-            server.dist_tx.send(DistKind::Broadcast(data));
+            server.dist.send(DistKind::Broadcast(data));
         }
     }
 
@@ -174,7 +174,7 @@ impl Server {
         data.extend_from_slice(uuid.as_bytes()); //refer to uuid
         
         let server = server.lock().unwrap();
-        server.dist_tx.send(DistKind::Broadcast(data));
+        server.dist.send(DistKind::Broadcast(data));
     }
 
     #[allow(unused_must_use)]
@@ -211,7 +211,7 @@ impl Server {
                         if let Ok(stmp) = s.try_clone() {
                             {
                                 let mut server = server.lock().unwrap();
-                                server.dist_tx.send(DistKind::Add(*c.id(),stmp));
+                                server.dist.send(DistKind::Add(*c.id(),stmp));
                                 server.players.insert(*c.id(),player.clone());
                                 println!("total players:{:?}",server.players.len());
                             }
@@ -247,7 +247,7 @@ impl Server {
             data.extend_from_slice(pid.as_bytes()); //refer to uuid
             
             
-            server.dist_tx.send(DistKind::Select(uuid,data));
+            server.dist.send(DistKind::Select(uuid,data));
         }
     }
 }
