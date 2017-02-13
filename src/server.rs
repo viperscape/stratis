@@ -6,7 +6,6 @@ use std::sync::{Arc, Mutex};
 use std::sync::mpsc::{Sender};
 
 use std::io::prelude::*;
-//use std::io::BufReader;
 
 extern crate hmacsha1;
 extern crate uuid;

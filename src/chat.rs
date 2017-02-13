@@ -9,7 +9,7 @@ use self::byteorder::{BigEndian,ByteOrder};
 pub const MAX_TEXT_LEN: usize = 2048;
 
 #[allow(unused_must_use)]
-pub fn read_text (mut s: &mut TcpStream,) -> Option<String> {
+pub fn read_text<S:Read> (mut s: &mut S) -> Option<String> {
     let mut size = [0;2];
     
     if let Ok(_) = s.read_exact(&mut size) {
