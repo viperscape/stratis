@@ -45,10 +45,7 @@ impl Server {
         };
 
         server.clients = server.store.clients_get();
-        
-        let server = Arc::new(Mutex::new(server));
-
-        
+        let server = Arc::new(Mutex::new(server)); //FIXME: mutex glom needs to go
         
         for s in listener.incoming() {
             match s {
