@@ -11,7 +11,7 @@ use std::io::prelude::*;
 extern crate hmacsha1;
 extern crate uuid;
 extern crate byteorder;
-extern crate rand;
+
 
 use self::uuid::Uuid;
 
@@ -118,9 +118,7 @@ impl Server {
             if let Ok(store) = server.store.lock() {
                 let mut r = false;
                 for _ in [..100].iter() { // try to repeatedly add a unique name
-                    let mut nick = "player_".to_string();
-                    nick.push_str(&rand::random::<u16>().to_string());
-                    r = store.player_put(&c.id(), &Player { nick: nick });
+                    r = store.player_put(&c.id(), &Player::default());
                     if r { break }
                 }
 
