@@ -12,8 +12,11 @@ fn main() {
     
     opts.optflag("b", "build", "Build SQL Database");
     opts.optflag("i",  "init", "Init new SQL Database");
+    opts.optflag("f",  "force", "Force option");
+    
     opts.optopt("u", "user", "SQL user", "USER");
     opts.optopt("p", "pass", "SQL password", "PASSWORD");
+    
 
     opts.optflag("w",  "watch", "Watch and rerun stratis builds");
     opts.optflag("d", "debug", "Specify debug stratis build");

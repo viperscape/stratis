@@ -15,6 +15,13 @@ pub fn build (matches: &getopts::Matches) {
         let conn = Connection::connect(s,
                                        TlsMode::None).expect("cannot connect to sql");
 
+        if matches.opt_present("f") {
+            let rdb = conn.execute("DROP DATABASE stratis", &[]);
+            let ru = conn.execute("DROP USER stratis", &[]);
+
+            println!("FORCED: DB {:?}, User {:?}", rdb, ru);
+        }
+
         let build = vec![&include_bytes!("../../sql/create_login.sql")[..],
                          &include_bytes!("../../sql/create_db.sql")[..]];
 
