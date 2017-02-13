@@ -2,8 +2,10 @@ extern crate postgres;
 extern crate uuid;
 
 use self::postgres::{Connection, TlsMode};
-use client::{ClientBase};
 use self::uuid::Uuid;
+
+use client::{ClientBase};
+use player::Player;
 
 pub trait DataStore: Sized {
     fn default () -> Self;
@@ -11,8 +13,9 @@ pub trait DataStore: Sized {
     fn client_put (&self, c: &ClientBase) -> bool;
     fn msg_put (&self, uuid: &Uuid, data: &Vec<u8>) -> bool;
     fn msg_get (&self, uuid: &Uuid) -> Vec<Vec<u8>>;
-    fn player_get (&self, uuid: &Uuid) -> Option<String>;
-    fn player_put (&self, uuid: &Uuid, nick: String) -> bool;
+    fn player_get (&self, uuid: &Uuid) -> Option<Player>;
+    fn player_put (&self, uuid: &Uuid, player: &Player) -> bool;
+    fn player_update (&self, uuid: &Uuid, player: &Player) -> bool;
 }
 
 #[derive(Debug)]
@@ -58,18 +61,25 @@ impl DataStore for Store {
         msgs
     }
 
-    fn player_get (&self, uuid: &Uuid) -> Option<String> {
-        if let Ok(r) = self.conn.query("select nick from players where uuid = $1 limit 1",&[uuid]) {
+    fn player_get (&self, uuid: &Uuid) -> Option<Player> {
+        if let Ok(r) = self.conn.query("select nick from players where uuid = $1",&[uuid]) {
             if let Some(r) = r.iter().next() {
-                return r.get(0)
+                return Some(Player { nick: r.get(0) })
             }
         }
 
         None
     }
-    fn player_put (&self, uuid: &Uuid, nick: String) -> bool {
+    fn player_put (&self, uuid: &Uuid, player: &Player) -> bool {
         let r = self.conn.execute("INSERT INTO players (uuid, nick) VALUES ($1, $2)",
-                                  &[uuid, &nick]);
+                                  &[uuid, &player.nick]);
+        println!("{:?}",r);
+
+        r.is_ok()
+    }
+    fn player_update (&self, uuid: &Uuid, player: &Player) -> bool {
+        let r = self.conn.execute("UPDATE players SET nick = $2 where uuid = $1",
+                                  &[uuid, &player.nick]);
         println!("{:?}",r);
 
         r.is_ok()

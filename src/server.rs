@@ -113,16 +113,19 @@ impl Server {
                 if &n.id == c.id() { continue }
             }
 
-            let r = server.store.client_put(&c.base);
-            println!("registered ({:?}):{:?}",r, c.id());
+            let mut r = false;
+            for _ in [..100].iter() { // try to repeatedly add a unique name
+                let mut nick = "player_".to_string();
+                nick.push_str(&rand::random::<u16>().to_string());
+                r = server.store.player_put(&c.id(), &Player { nick: nick });
+                if r { break }
+            }
 
-            let mut nick = "player_".to_string();
-            nick.push_str(&rand::random::<u16>().to_string());
-            println!("nick:{:?}",nick);
-            server.store.player_put(&c.id(),nick);
-            
-            
-            server.clients.push(c.base);
+            if r {
+                let r = server.store.client_put(&c.base);
+                println!("registered ({:?}):{:?}",r, c.id());
+                server.clients.push(c.base);
+            }
         }
     }
 
@@ -151,20 +154,30 @@ impl Server {
              mut s: &mut TcpStream,
              uuid: Uuid) {
         
-        if let Some(text) = read_text(s) {            
-            //broadcast
-            let (mut data, bytes) = text_as_bytes(&text);
-            data[0] = 3; //change opcode to nick
-            data.extend_from_slice(bytes);
-            
-                
-            let server = server.lock().unwrap();
-            data.extend_from_slice(uuid.as_bytes()); //refer to uuid
-            
-            server.dist_tx.send(DistKind::Broadcast(data));
+        if let Some(text) = read_text(s) {
+            let r = {
+                let server = server.lock().unwrap();
+                server.store.player_update(&uuid, &Player { nick: text.clone() })
+            };
 
-            println!("nick_change:{:?}  {:?}",uuid,text);
+            if r {
+                Server::send_nick(server, uuid,&text);
+                println!("nick_change:{:?}  {:?}",uuid,text);
+            }
         }
+    }
+     #[allow(unused_must_use)]
+    fn send_nick (server: &mut Arc<Mutex<Server>>,
+                  uuid: Uuid,
+                  nick: &String) {
+        //broadcast
+        let (mut data, bytes) = text_as_bytes(nick);
+        data[0] = 3; //change opcode to nick
+        data.extend_from_slice(bytes);
+        data.extend_from_slice(uuid.as_bytes()); //refer to uuid
+        
+        let server = server.lock().unwrap();
+        server.dist_tx.send(DistKind::Broadcast(data));
     }
 
     #[allow(unused_must_use)]
@@ -172,42 +185,44 @@ impl Server {
               mut s: &mut TcpStream,
               m: Uuid) -> Option<Uuid> {
         let mut client_id = None;
+        let mut player = None;
         
         if let Some(c) = Client::load(&mut s) {
-            let mut server = server.lock().unwrap();
-
             let mut reg_key = None;
-            for n in server.clients.iter_mut() {
-                if &n.id == c.id() {
-                    reg_key = Some(n.key.clone());
-                    client_id = Some(c.id().clone());
-                    
-                    break
+            
+            {
+                let mut server = server.lock().unwrap();
+                for n in server.clients.iter_mut() {
+                    if &n.id == c.id() {
+                        reg_key = Some(n.key.clone());
+                        client_id = Some(c.id().clone());
+                        
+                        break
+                    }
                 }
             }
 
             if let Some(key) = reg_key {
                 let hm = hmacsha1::hmac_sha1(&key, m.as_bytes());
                 if c.key() == hm {
-                    let mut nick = None;
-                    
-                    if let Some(n) = server.store.player_get(c.id()) {
-                        nick = Some(n);
+                    {
+                        let mut server = server.lock().unwrap();
+                        player = server.store.player_get(c.id());
                     }
                     
-                    if let Some(nick) = nick {
-                        server.players.insert(*c.id(),
-                                              Player { nick: nick });
-                    }
-                    else { panic!("{:?} missing nick", c.id()) }
-                    
+                    if let Some(player) = player {
+                        if let Ok(stmp) = s.try_clone() {
+                            {
+                                let mut server = server.lock().unwrap();
+                                server.dist_tx.send(DistKind::Add(*c.id(),stmp));
+                                server.players.insert(*c.id(),player.clone());
+                                println!("total players:{:?}",server.players.len());
+                            }
 
-                    if let Ok(stmp) = s.try_clone() {
-                        server.dist_tx.send(DistKind::Add(*c.id(),stmp));
+                            println!("login:{:?}",c.id());
+                            Server::send_nick(server, *c.id(), &player.nick);
+                        }
                     }
-                    
-                    println!("login:{:?}",c.id());
-                    println!("total clients:{:?}",server.players.len());
                 }
                 else {
                     panic!("client invalid login {:?}", c)
