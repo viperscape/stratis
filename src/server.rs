@@ -87,7 +87,7 @@ impl Server {
                         if let Some(uuid) = client_id {
                             match cmd[0] {
                                 2 => { //chat
-                                    Server::chat(&mut server, &mut s, uuid);
+                                    Server::handle_chat(&mut server, &mut s, uuid);
                                 },
                                 3 => { //player
                                     if let (_, Some(player)) = Player::from_stream(&mut s, false) {
@@ -144,7 +144,7 @@ impl Server {
     }
 
     #[allow(unused_must_use)]
-    fn chat (server: &mut Server,
+    fn handle_chat (server: &mut Server,
              mut s: &mut TcpStream,
              uuid: Uuid) {
         
