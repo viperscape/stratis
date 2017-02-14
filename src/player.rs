@@ -1,8 +1,10 @@
 extern crate rand;
+extern crate uuid;
 
 use std::io::prelude::*;
 
 use chat::{read_text,text_as_bytes};
+use self::uuid::Uuid;
 
 
 #[derive(Debug,Clone)]
@@ -19,22 +21,39 @@ impl Player {
     }
 
     #[allow(dead_code)]
-    pub fn from_stream<S:Read> (mut s: &mut S) -> Option<Player> {
+    pub fn from_stream<S:Read> (mut s: &mut S, get_uuid: bool) -> (Option<Uuid>, Option<Player>) {
         if let Some(text) = read_text(s) {
-            return Some(Player { nick: text })
+            let p = Some(Player { nick: text.trim().to_owned() });
+            let i;
+            if !get_uuid { i = None }
+            else {
+                let mut id = [0u8;16];
+                if let Ok(_) = s.read_exact(&mut id) {
+                    if let Ok(uuid) = Uuid::from_bytes(&id) {
+                        i = Some(uuid);
+                    }
+                    else { i = None }
+                }
+                else { i = None } 
+            }
+            
+            return (i, p)
         }
 
-        None
+        (None,None)
     }
 
     #[allow(dead_code)]
-    pub fn to_bytes (player: &Player) -> Vec<u8> {
+    pub fn to_bytes (uuid: Option<&Uuid>, player: &Player) -> Vec<u8> {
         let (mut data, bytes) = text_as_bytes(&player.nick);
-        //TODO: remove nick protocol and use Player protocol only
-        //NOTE: for now use '4'
-        data[0] = 4; //specify Player route in protocol
+        
+        data[0] = 3; //specify Player route in protocol
         data.extend_from_slice(bytes);
 
+        if let Some(uuid) = uuid {
+            data.extend_from_slice(uuid.as_bytes()); //refer to uuid
+        }
+        
         data
     }
 }
