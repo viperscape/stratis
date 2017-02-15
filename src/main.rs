@@ -8,6 +8,7 @@ mod distributor;
 mod chat;
 mod store;
 mod player;
+mod opcode;
 
 use client::Client;
 

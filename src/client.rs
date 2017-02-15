@@ -15,7 +15,7 @@ use std::sync::{Arc, Mutex};
 
 use player::Player;
 use chat::{read_text,write_text, text_as_bytes};
-
+use opcode;
 
 #[derive(Debug,Clone)]
 pub struct ClientBase {
@@ -177,7 +177,7 @@ impl Client {
         loop {
             if let Ok(_) = s.read_exact(&mut cmd) {
                 match cmd[0] {
-                    2 => { // chat
+                    opcode::CHAT => { // chat
                         if let Some(text) = read_text(&mut s) {
                             let mut id = [0u8;16];
                             if let Ok(_) = s.read_exact(&mut id) {
@@ -189,7 +189,7 @@ impl Client {
                             }
                         }
                     },
-                    3 => { //player
+                    opcode::PLAYER => { //player
                         if let (Some(uuid),Some(player)) = Player::from_stream(&mut s, true) {
                             println!("player:{:?} {:?}", uuid, player);
                             self.cache.insert(uuid, player);

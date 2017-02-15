@@ -21,6 +21,7 @@ use distributor::Distributor;
 use distributor::Kind as DistKind;
 use store::{DataStore,Store};
 use player::Player;
+use opcode;
 
 #[derive(Debug,Clone)]
 pub struct Server {
@@ -74,22 +75,22 @@ impl Server {
         loop {
             if let Ok(_) = s.read_exact(&mut cmd) {
                 match cmd[0] {
-                    0 => { //login
+                    opcode::LOGIN => { //login
                         client_id = Server::login(&mut server, &mut s, m);
                         if let Some(uuid) = client_id {
                             Server::send_players(&mut server, uuid);
                         }
                     },
-                    1 => { //register
+                    opcode::REGISTER => { //register
                         Server::register(&mut server, &mut s);
                     },
                     _ => {
                         if let Some(uuid) = client_id {
                             match cmd[0] {
-                                2 => { //chat
+                                opcode::CHAT => { //chat
                                     Server::handle_chat(&mut server, &mut s, uuid);
                                 },
-                                3 => { //player
+                                opcode::PLAYER => { //player
                                     if let (_, Some(player)) = Player::from_stream(&mut s, false) {
                                         if let Ok(store) = server.store.lock() {
                                             if store.player_update(&uuid, &player) {
