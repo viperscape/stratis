@@ -1,8 +1,15 @@
-#### chat
+#### chat logic
 
-payload must be laid out as follows
-    
-- first byte is 2 signifiying chat text route
-- size of text is stated as the second two bytes as u16 in bigendian format
-- following bytes are text payload (expects utf8)
-- if client is receiving then following 16 bytes represent UUID of player, sent from server
+- client sends bytes of chat to server without uuid
+- server parses stream of chat from client
+- server sends chat with uuid of client to all client streams
+- client parses steam of chat from server along with uuid specifying other client
+
+
+#### chat layout
+
+- first byte is opcode specifying it's chat
+- second two bytes, as big endian, state length of text string
+- following bytes up to length are to be parsed as string
+- UTF8 encoded
+- optionally end with uuid of client
