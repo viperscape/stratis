@@ -189,21 +189,10 @@ impl Client {
                             }
                         }
                     },
-                    3 => {
-                        // nick updates
-                        //NOTE: this is how we will update player list for region
-
-                        if let Some(text) = read_text(&mut s) {
-                            let mut id = [0u8;16];
-                            if let Ok(_) = s.read_exact(&mut id) {
-                                if let Ok(uuid) = Uuid::from_bytes(&id) {
-                                    let nick = text.trim();
-                                    println!("nick_change:{:?}  {:?}",
-                                             uuid, nick);
-
-                                    self.cache.insert(uuid, Player { nick: nick.to_owned() });
-                                }
-                            }
+                    3 => { //player
+                        if let (Some(uuid),Some(player)) = Player::from_stream(&mut s, true) {
+                            println!("player:{:?} {:?}", uuid, player);
+                            self.cache.insert(uuid, player);
                         }
                     },
                     _ => {

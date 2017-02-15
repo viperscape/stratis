@@ -77,7 +77,7 @@ impl Server {
                     0 => { //login
                         client_id = Server::login(&mut server, &mut s, m);
                         if let Some(uuid) = client_id {
-                            Server::send_nicks(&mut server, uuid);
+                            Server::send_players(&mut server, uuid);
                         }
                     },
                     1 => { //register
@@ -87,10 +87,19 @@ impl Server {
                         if let Some(uuid) = client_id {
                             match cmd[0] {
                                 2 => { //chat
-                                    Server::chat(&mut server, &mut s, uuid);
+                                    Server::handle_chat(&mut server, &mut s, uuid);
                                 },
-                                3 => { //nick
-                                    Server::nick(&mut server, &mut s, uuid);
+                                3 => { //player
+                                    if let (_, Some(player)) = Player::from_stream(&mut s, false) {
+                                        if let Ok(store) = server.store.lock() {
+                                            if store.player_update(&uuid, &player) {
+                                                let data = Player::to_bytes(Some(&uuid),&player);
+                                                server.dist.send(DistKind::Broadcast(data));
+                                                
+                                                println!("nick_change:{:?}  {:?}",uuid,player);
+                                            }
+                                        }
+                                    }
                                 },
                                 _ => panic!("unknown cmd:{:?}",cmd)
                             }
@@ -135,7 +144,7 @@ impl Server {
     }
 
     #[allow(unused_must_use)]
-    fn chat (server: &mut Server,
+    fn handle_chat (server: &mut Server,
              mut s: &mut TcpStream,
              uuid: Uuid) {
         
@@ -149,33 +158,6 @@ impl Server {
             
             server.dist.send(DistKind::Broadcast(data));
         }
-    }
-
-    #[allow(unused_must_use)]
-    fn nick (server: &mut Server,
-             mut s: &mut TcpStream,
-             uuid: Uuid) {
-        
-        if let Some(text) = read_text(s) {
-            if let Ok(store) = server.store.lock() {
-                if store.player_update(&uuid, &Player { nick: text.clone() }) {
-                    server.send_nick(uuid,&text);
-                    println!("nick_change:{:?}  {:?}",uuid,text);
-                }
-            }
-        }
-    }
-     #[allow(unused_must_use)]
-    fn send_nick (&self,
-                  uuid: Uuid,
-                  nick: &String) {
-        //broadcast
-        let (mut data, bytes) = text_as_bytes(nick);
-        data[0] = 3; //change opcode to nick
-        data.extend_from_slice(bytes);
-        data.extend_from_slice(uuid.as_bytes()); //refer to uuid
-        
-        self.dist.send(DistKind::Broadcast(data));
     }
 
     #[allow(unused_must_use)]
@@ -219,7 +201,8 @@ impl Server {
                             }
 
                             println!("login:{:?}",c.id());
-                            server.send_nick(*c.id(), &player.nick);
+                            let data = Player::to_bytes(Some(c.id()),&player);
+                            server.dist.send(DistKind::Broadcast(data));
                         }
                     }
                 }
@@ -237,16 +220,12 @@ impl Server {
     #[allow(unused_must_use)]
     //NOTE: this is very innefficient, and hogs the mutex
     //TODO: rework state updates entirely
-    fn send_nicks (server: &mut Server,
-                   uuid: Uuid)  {
+    fn send_players (server: &mut Server,
+                     uuid: Uuid)  {
 
         if let Ok(players) = server.players.lock() {
             for (ref pid,player) in players.iter() {
-                let (mut data, bytes) = text_as_bytes(&player.nick);
-                data[0] = 3; // specify nick route
-                
-                data.extend_from_slice(bytes);
-                data.extend_from_slice(pid.as_bytes()); //refer to uuid
+                let data = Player::to_bytes(Some(pid),&player);
                 
                 server.dist.send(DistKind::Select(uuid,data));
             }
