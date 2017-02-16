@@ -18,11 +18,11 @@ pub fn watcher (matches: &getopts::Matches) {
     let stratis_dest;
     
     if matches.opt_present("d") {
-        stratis_path.push_str("\\target\\debug\\");
+        stratis_path.push_str("\\server\\target\\debug\\");
         stratis_dest = stratis_path.clone()+"PAN_stratis.exe";
     }
     else {
-        stratis_path.push_str("\\target\\release\\");
+        stratis_path.push_str("\\server\\target\\release\\");
         stratis_dest = stratis_path.clone()+"\\PAN_stratis.exe";
     }
 
