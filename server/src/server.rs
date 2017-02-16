@@ -11,17 +11,16 @@ extern crate hmacsha1;
 extern crate uuid;
 extern crate byteorder;
 
-
+use shared::{chat,client,opcode,player};
 use self::uuid::Uuid;
 
 
-use client::{Client,ClientBase};
-use chat::{read_text,text_as_bytes};
+use self::client::{Client,ClientBase};
+use self::chat::{read_text,text_as_bytes};
 use distributor::Distributor;
 use distributor::Kind as DistKind;
 use store::{DataStore,Store};
-use player::Player;
-use opcode;
+use self::player::Player;
 
 #[derive(Debug,Clone)]
 pub struct Server {

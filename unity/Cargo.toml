@@ -9,4 +9,4 @@ name = "stratis_unity"
 crate-type = ["dylib"]
 
 [dependencies]
-stratis = { path = '../' }
+stratis-shared = { path = "../shared" }

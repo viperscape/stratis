@@ -4,8 +4,8 @@ extern crate uuid;
 use self::postgres::{Connection, TlsMode};
 use self::uuid::Uuid;
 
-use client::{ClientBase};
-use player::Player;
+use shared::client::{ClientBase};
+use shared::player::Player;
 
 pub trait DataStore: Sized {
     fn default () -> Self;

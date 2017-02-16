@@ -1,6 +1,6 @@
 extern crate stratis;
 
-use stratis::{Client,Game,Server};
+use stratis::{Client,Server};
 
 use std::io;
 use std::thread;
@@ -10,7 +10,6 @@ use std::thread;
 fn main() {
     let mut input = String::new();
     
-    let _game = Game::new();
     let ip_addr = "127.0.0.1:9996";
     
     let _server_thread = thread::spawn(move || {
