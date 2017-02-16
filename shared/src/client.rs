@@ -32,31 +32,30 @@ pub struct Client {
 
 impl Client {
     #[allow(dead_code)]
-    pub fn default (key: Vec<u8>, uuid: Uuid) -> Client {
-        Client { base: ClientBase { key:key,
+    pub fn default (key: [u8;20], uuid: Uuid) -> Client {
+        Client { base: ClientBase { key:From::from(&key[..]),
                                     id:uuid, },
                  stream: None,
                  cache: HashMap::new() }
     }
     
     #[allow(unused_must_use)]
-    pub fn new (path: &str) -> Client {        
+    pub fn new () -> Client {        
         let id = uuid::Uuid::new_v4();
         let m = hmacsha1::hmac_sha1(uuid::Uuid::new_v4().as_bytes(),
                                     id.as_bytes());
 
-        
-        let cb = ClientBase { id: id, key: From::from(&m[..]) };
-        let client = Client { base: cb, stream: None, cache: HashMap::new() };
-
+       
+        Client::default(m,id)
+    }
+    #[allow(unused_must_use)]
+    pub fn save (client: &Client, path: &str) {
         let f = File::create(path);
         if !f.is_ok() { panic!("cannot create client file") }
         if let Ok(mut f) = f {
             f.write_all(&client.base.key);
             f.write_all(client.base.id.as_bytes());
         }
-
-        client
     }
 
     pub fn id (&self) -> &Uuid {
