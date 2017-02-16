@@ -39,14 +39,13 @@ pub fn watcher (matches: &getopts::Matches) {
 
     
     let (tx, rx) = channel();
-    let mut w = self::notify::watcher(tx,Duration::from_secs(3)).expect("unable to create filesys watcher");
+    let mut w = self::notify::watcher(tx,Duration::from_secs(1)).expect("unable to create filesys watcher");
 
-    w.watch(stratis_path.clone()+"\\stratis.exe",RecursiveMode::NonRecursive).expect("unable to watch directory");
+    w.watch(stratis_path.clone()+"\\stratis.exe",RecursiveMode::NonRecursive);
     
     if let Ok(ref dest) = unity_dest {
         println!("watching stratis_unity builds for:{:?}",dest);
-        w.watch(unity_path.clone()+"\\stratis_unity.dll",RecursiveMode::NonRecursive).expect("unable to watch directory");
-
+        w.watch(unity_path.clone()+"\\stratis_unity.dll",RecursiveMode::NonRecursive);
     }
 
     
