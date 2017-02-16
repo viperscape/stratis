@@ -1,26 +1,20 @@
+extern crate stratis;
+
+use stratis::{Client,Game,Server};
+
 use std::io;
 use std::thread;
 
-mod game;
-mod client;
-mod server;
-mod distributor;
-mod chat;
-mod store;
-mod player;
-mod opcode;
-
-use client::Client;
 
 #[allow(unused_must_use)]
 fn main() {
     let mut input = String::new();
     
-    let _game = game::Game::new();
+    let _game = Game::new();
     let ip_addr = "127.0.0.1:9996";
     
     let _server_thread = thread::spawn(move || {
-        server::Server::new(ip_addr);
+        Server::new(ip_addr);
     });
     
     let mut client;
