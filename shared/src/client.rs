@@ -27,7 +27,7 @@ pub struct ClientBase {
 pub struct Client {
     pub base: ClientBase,
     pub stream: Option<Arc<Mutex<TcpStream>>>,
-    pub cache: HashMap<Uuid,Player>,
+    pub cache: HashMap<Uuid,Player>, //TODO: arc-mutex me
 }
 
 impl Client {
