@@ -50,6 +50,15 @@ pub fn watcher (matches: &getopts::Matches) {
 
     
     let mut spawn_handle: Option<Child> = None;
+    if matches.opt_present("r") {
+        
+        if Command::new("cargo")
+            .current_dir(stratis_project.clone() + "server")
+            .arg("build")
+            .status().expect("failed to build stratis server").success() {
+                spawn_handle = spawn(&stratis_dest);
+            }
+    }
     
     for n in rx.iter() {
         let mut new_spawn_handle = None;

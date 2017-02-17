@@ -20,6 +20,8 @@ fn main() {
 
     opts.optflag("w",  "watch", "Watch and rerun stratis builds");
     opts.optflag("d", "debug", "Specify debug stratis build");
+
+    opts.optflag("r",  "run", "Run server immediately");
     
     
     let matches = match opts.parse(&args[1..]) {
