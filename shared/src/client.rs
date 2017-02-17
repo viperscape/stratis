@@ -102,11 +102,11 @@ impl Client {
         if let Ok(s) = TcpStream::connect(server) {
             self.stream = Some(Arc::new(Mutex::new(s)));
         }
-        else { panic!("cannot connect to server {:?}",server) }
+        else { println!("cannot connect to server {:?}",server) }
     }
 
     #[allow(unused_must_use)]
-    pub fn login (&mut self) {
+    pub fn login (&mut self) -> bool {
         let mut c = self.clone();
         if let Some(ref s) = self.stream {
             if let Ok(ref mut s) = s.lock() {
@@ -122,9 +122,13 @@ impl Client {
                     thread::spawn(move || {
                         c.handler()
                     });
+
+                    return true
                 }
             }
         }
+
+        false
     }
 
     #[allow(unused_must_use)]

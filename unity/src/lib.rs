@@ -1,6 +1,8 @@
 extern crate stratis_shared as shared;
 
 use std::mem::transmute;
+use std::io::Write;
+use std::net::Shutdown;
 
 use shared::client::Client;
 use shared::Uuid;
@@ -20,7 +22,14 @@ pub extern fn default_client(key: [u8;20], uuid: [u8;16]) -> *mut Client {
 
 #[no_mangle]
 pub extern fn drop_client(cptr: *mut Client) {
-    let _: Box<Client> = unsafe { transmute(cptr) };
+    let bc: Box<Client> = unsafe { transmute(cptr) };
+    let c: Client = *bc;
+    if let Some(ms) = c.stream {
+        if let Ok(mut s) = ms.lock() {
+            let _ = s.flush();
+            let _ = s.shutdown(Shutdown::Both);
+        }
+    }
 }
 
 //TODO: figure out refs, or just use a cstruct perhaps?
@@ -44,4 +53,22 @@ pub extern fn get_client_key(cptr: *mut Client) -> [u8;20] {
     }
 
     key
+}
+
+//TODO: server-ip as arg
+#[no_mangle]
+pub extern fn client_connect(cptr: *mut Client) -> bool {
+    let mut client = unsafe { &mut *cptr };
+    client.connect("127.0.0.1:9996");
+    client.stream.is_some()
+}
+#[no_mangle]
+pub extern fn client_login(cptr: *mut Client) -> bool {
+    let mut client = unsafe { &mut *cptr };
+    client.login()
+}
+#[no_mangle]
+pub extern fn client_register(cptr: *mut Client) {
+    let mut client = unsafe { &mut *cptr };
+    client.register();
 }
