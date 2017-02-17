@@ -49,13 +49,13 @@ impl Client {
         Client::default(m,id)
     }
     #[allow(unused_must_use)]
-    pub fn save (client: &Client, path: &str) {
+    pub fn save (client: &Client, path: &str) -> bool {
         let f = File::create(path);
-        if !f.is_ok() { panic!("cannot create client file") }
         if let Ok(mut f) = f {
             f.write_all(&client.base.key);
-            f.write_all(client.base.id.as_bytes());
+            f.write_all(client.base.id.as_bytes()).is_ok()
         }
+        else { false }
     }
 
     pub fn id (&self) -> &Uuid {

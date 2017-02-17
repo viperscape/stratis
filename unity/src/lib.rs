@@ -72,3 +72,20 @@ pub extern fn client_register(cptr: *mut Client) {
     let mut client = unsafe { &mut *cptr };
     client.register();
 }
+
+
+/// these are highly OS dependent
+#[no_mangle]
+pub extern fn client_save(cptr: *mut Client) -> bool {
+    let client = unsafe { & *cptr };
+    Client::save(&client, "game/client.key")
+}
+#[no_mangle]
+pub extern fn client_load(cptr: *mut Client) -> bool {
+    let mut client = unsafe { &mut *cptr };
+    if let Some(c) = Client::load_file("game/client.key") {
+        client.base = c.base;
+        true
+    }
+    else { false }
+}
