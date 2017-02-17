@@ -4,8 +4,18 @@ use std::mem::transmute;
 use std::io::Write;
 use std::net::Shutdown;
 
+use std::os::raw::c_char;
+use std::ffi::CStr;
+use std::str;
+use std::str::Utf8Error;
+
 use shared::client::Client;
 use shared::Uuid;
+
+fn str_from_ptr<'a> (s: *const c_char) -> Result<&'a str,Utf8Error> {
+    let cstr = unsafe { CStr::from_ptr(s) };
+    str::from_utf8(cstr.to_bytes())
+}
 
 #[no_mangle]
 pub extern fn new_client() -> *mut Client {
@@ -55,11 +65,13 @@ pub extern fn get_client_key(cptr: *mut Client) -> [u8;20] {
     key
 }
 
-//TODO: server-ip as arg
+
 #[no_mangle]
-pub extern fn client_connect(cptr: *mut Client) -> bool {
+pub extern fn client_connect(cptr: *mut Client, s: *const c_char) -> bool {
     let mut client = unsafe { &mut *cptr };
-    client.connect("127.0.0.1:9996");
+    if let Ok(s) = str_from_ptr(s) {
+        client.connect(s);
+    }
     client.stream.is_some()
 }
 #[no_mangle]
@@ -78,14 +90,30 @@ pub extern fn client_register(cptr: *mut Client) {
 #[no_mangle]
 pub extern fn client_save(cptr: *mut Client) -> bool {
     let client = unsafe { & *cptr };
-    Client::save(&client, "game/client.key")
+    Client::save(&client, "client.key")
 }
 #[no_mangle]
 pub extern fn client_load(cptr: *mut Client) -> bool {
     let mut client = unsafe { &mut *cptr };
-    if let Some(c) = Client::load_file("game/client.key") {
+    if let Some(c) = Client::load_file("client.key") {
         client.base = c.base;
         true
     }
     else { false }
+}
+
+
+#[no_mangle]
+pub extern fn client_chat(cptr: *mut Client, s: *const c_char) {
+    let mut client = unsafe { &mut *cptr };
+    if let Ok(s) = str_from_ptr(s) {
+        client.chat(s);
+    }
+}
+#[no_mangle]
+pub extern fn client_nick(cptr: *mut Client, s: *const c_char) {
+    let mut client = unsafe { &mut *cptr };
+    if let Ok(s) = str_from_ptr(s) {
+        client.nick(s);
+    }
 }
