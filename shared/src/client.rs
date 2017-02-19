@@ -28,6 +28,7 @@ pub struct Client {
     pub base: ClientBase,
     pub stream: Option<Arc<Mutex<TcpStream>>>,
     pub cache: HashMap<Uuid,Player>, //TODO: arc-mutex me
+    pub msg: Arc<Mutex<Vec<(Uuid,String)>>>, //cached messages of inbound chat
 }
 
 impl Client {
@@ -36,7 +37,9 @@ impl Client {
         Client { base: ClientBase { key:From::from(&key[..]),
                                     id:uuid, },
                  stream: None,
-                 cache: HashMap::new() }
+                 cache: HashMap::new(),
+                 msg: Arc::new(Mutex::new(vec!())),
+        }
     }
     
     #[allow(unused_must_use)]
@@ -86,9 +89,7 @@ impl Client {
         if let Ok(_) = s.read_exact(&mut key) {
             if let Ok(_) = s.read_exact(&mut id) {
                 if let Ok(id) = Uuid::from_bytes(&id) {
-                    return Some(Client { base: ClientBase { id:id, key: From::from(&key[..]) },
-                                         stream:None,
-                                         cache:HashMap::new() })
+                    return Some(Client::default(key, id))
                 }
                 else { println!("cannot uuid file") }
             }
@@ -185,9 +186,9 @@ impl Client {
                             let mut id = [0u8;16];
                             if let Ok(_) = s.read_exact(&mut id) {
                                 if let Ok(uuid) = Uuid::from_bytes(&id) {
-                                    println!("{:?} says: {:?}",
-                                             self.cache.get(&uuid),
-                                             text.trim());
+                                    if let Ok(ref mut msg) = self.msg.lock() {
+                                        msg.push((uuid,text));
+                                    }
                                 }
                             }
                         }
