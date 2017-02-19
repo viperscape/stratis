@@ -93,7 +93,10 @@ pub fn watcher (matches: &getopts::Matches) {
                 else if path == path::PathBuf::from(unity_path.clone()+"\\stratis_unity.dll") {
                     if let Ok(ref unity_dest) = unity_dest {
                         println!("copying unity dll");
-                        let r = fs::copy(&path,unity_dest.clone()+"\\Assets\\Plugins\\stratis_unity.dll");
+                        let r = fs::copy(&path,stratis_project.clone()+"\\unity_ffi\\stratis_unity.dll"); // we do this because VS is stupid
+                        println!("watcher-copy:{:?}",r);
+                        
+                        let r = fs::copy(&path,stratis_project.clone()+"\\unity_ffi\\Assets\\Plugins\\stratis_unity.dll");
                         println!("watcher-copy:{:?}",r);
                     }
                 }
