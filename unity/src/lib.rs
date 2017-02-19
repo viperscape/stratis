@@ -5,12 +5,13 @@ use std::io::Write;
 use std::net::Shutdown;
 
 use std::os::raw::c_char;
-use std::ffi::CStr;
+use std::ffi::{CStr,CString};
 use std::str;
 use std::str::Utf8Error;
 
 use shared::client::Client;
 use shared::Uuid;
+use shared::chat::MAX_TEXT_LEN;
 
 fn str_from_ptr<'a> (s: *const c_char) -> Result<&'a str,Utf8Error> {
     let cstr = unsafe { CStr::from_ptr(s) };
@@ -32,14 +33,14 @@ pub extern fn default_client(key: [u8;20], uuid: [u8;16]) -> *mut Client {
 
 #[no_mangle]
 pub extern fn drop_client(cptr: *mut Client) {
-    let bc: Box<Client> = unsafe { transmute(cptr) };
-    let c: Client = *bc;
-    if let Some(ms) = c.stream {
+    let mut bc = unsafe { Box::from_raw(cptr) };
+   /* if let Some(ref mut ms) = bc.stream {
         if let Ok(mut s) = ms.lock() {
             let _ = s.flush();
             let _ = s.shutdown(Shutdown::Both);
         }
-    }
+    }*/
+    drop(bc);
 }
 
 //TODO: figure out refs, or just use a cstruct perhaps?
@@ -116,4 +117,36 @@ pub extern fn client_nick(cptr: *mut Client, s: *const c_char) {
     if let Ok(s) = str_from_ptr(s) {
         client.nick(s);
     }
+}
+
+
+#[repr(C)]
+pub struct ChatFrame {
+    //id: [u8;16],
+    msg: [u8;MAX_TEXT_LEN],
+}
+
+//NOTE: this is meant to be polled on frame-tick
+#[no_mangle]
+pub extern fn get_client_chat(cptr: *mut Client, chat: &mut ChatFrame) -> bool {
+    let client = unsafe { & *cptr };
+    
+    if let Ok(mut v) = client.msg.lock() {
+        if v.len() > 0 {
+            let (uuid, msg) = v.remove(0);
+            
+            //chat.id = uuid.as_bytes().clone();
+
+            let bytes = msg.as_bytes();
+            for (i,b) in bytes.iter().enumerate() {
+                chat.msg[i] = *b;
+            }
+
+            //chat.len = bytes.len() as u16;
+            
+            return true
+        }
+    }
+
+    false
 }
