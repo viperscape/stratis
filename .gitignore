@@ -4,6 +4,5 @@ game
 *#
 unity_ffi/bin/
 unity_ffi/.vs/
-*.dll
 unity_ffi/obj/
 unity_ffi/TestResults/
