@@ -10,7 +10,7 @@ namespace Assets
     {
         public const byte ID_LEN = 16;
         public const byte KEY_LEN = 20;
-
+        public const UInt16 MAX_TEXT_LEN = 2048;
 
         [DllImport("stratis_unity")]
         public static extern IntPtr new_client();
@@ -28,9 +28,9 @@ namespace Assets
         public static extern IntPtr default_client(Byte[] key, Byte[] id);
 
         [DllImport("stratis_unity")]
-        public static extern bool client_connect(IntPtr cptr, String s);
+        public static extern byte client_connect(IntPtr cptr, String s);
         [DllImport("stratis_unity")]
-        public static extern bool client_login(IntPtr cptr);
+        public static extern byte client_login(IntPtr cptr);
         [DllImport("stratis_unity")]
         public static extern void client_register(IntPtr cptr);
 
@@ -44,8 +44,9 @@ namespace Assets
         [DllImport("stratis_unity")]
         public static extern void client_nick(IntPtr cptr, String s);
 
-        //[DllImport("stratis_unity")]
-        //public static extern bool get_client_chat(IntPtr cptr, ChatFrame chat);
+        [DllImport("stratis_unity")]
+        [return: MarshalAs(UnmanagedType.U2)]
+        public static extern UInt16 get_client_chat(IntPtr cptr, [In][Out] ref MChatFrame chat);
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -58,5 +59,22 @@ namespace Assets
         [MarshalAs(UnmanagedType.ByValArray,
             ArraySubType = UnmanagedType.U1, SizeConst = FFI.KEY_LEN)]
         public byte[] key;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct MChatFrame
+    {
+        [MarshalAs(UnmanagedType.ByValArray,
+            ArraySubType = UnmanagedType.U1, SizeConst = FFI.ID_LEN)]
+        public byte[] id;
+
+        [MarshalAs(UnmanagedType.ByValArray,
+            ArraySubType = UnmanagedType.U1, SizeConst = FFI.MAX_TEXT_LEN)]
+        public byte[] msg;
+
+        public string get_msg (UInt16 len)
+        {
+            return System.Text.Encoding.UTF8.GetString(this.msg, 0, len);
+        }
     }
 }
