@@ -53,7 +53,7 @@ pub fn watcher (matches: &getopts::Matches) {
     if matches.opt_present("r") {
         
         if Command::new("cargo")
-            .current_dir(stratis_project.clone() + "server")
+            .current_dir(stratis_project.clone() + "\\server\\")
             .arg("build")
             .status().expect("failed to build stratis server").success() {
                 spawn_handle = spawn(&stratis_dest);
