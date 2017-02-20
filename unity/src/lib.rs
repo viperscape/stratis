@@ -9,9 +9,16 @@ use std::ffi::{CStr,CString};
 use std::str;
 use std::str::Utf8Error;
 
-use shared::client::Client;
+use shared::client::{Client,KEY_LEN,ID_LEN};
 use shared::Uuid;
 use shared::chat::MAX_TEXT_LEN;
+
+/// managed client-base for c-interop
+#[repr(C)]
+pub struct MClientBase {
+    id: [u8;ID_LEN],
+    key: [u8;KEY_LEN],
+}
 
 fn str_from_ptr<'a> (s: *const c_char) -> Result<&'a str,Utf8Error> {
     let cstr = unsafe { CStr::from_ptr(s) };
@@ -24,7 +31,7 @@ pub extern fn new_client() -> *mut Client {
 }
 
 #[no_mangle]
-pub extern fn default_client(key: [u8;20], uuid: [u8;16]) -> *mut Client {
+pub extern fn default_client(key: [u8;KEY_LEN], uuid: [u8;ID_LEN]) -> *mut Client {
     if let Ok(id) = Uuid::from_bytes(&uuid) {
         unsafe { transmute(Box::new(Client::default(key, id))) }
     }
@@ -43,27 +50,20 @@ pub extern fn drop_client(cptr: *mut Client) {
     drop(bc);
 }
 
-//TODO: figure out refs, or just use a cstruct perhaps?
-#[no_mangle]
-pub extern fn get_client_id(cptr: *mut Client) -> [u8;16] {
-    let client = unsafe { & *cptr };
-    let mut id = [0u8;16];
-    for (i,n) in client.base.id.as_bytes().iter().enumerate() {
-        id[i] = *n;
-    }
-
-    id
-}
 
 #[no_mangle]
-pub extern fn get_client_key(cptr: *mut Client) -> [u8;20] {
-    let client = unsafe { & *cptr };
-    let mut key = [0u8;20];
-    for (i,n) in client.base.key.iter().enumerate() {
+pub extern fn get_client_base(cptr: *mut Client, cb: &mut MClientBase) -> u8 {
+    let mut client = unsafe { &mut *cptr };
+
+    let mut key = [0u8;KEY_LEN];
+    for (i,n) in client.key().iter().enumerate() {
         key[i] = *n;
     }
+    
+    cb.id = client.base.id.as_bytes().clone();
+    cb.key = key;
 
-    key
+    client.key()[0]
 }
 
 

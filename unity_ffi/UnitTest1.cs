@@ -9,21 +9,23 @@ namespace FFI_TESTS
     [TestClass]
     public class UnitTest1
     {
-        [TestMethod]
+        /*[TestMethod]
         public void smoke()
         {
             IntPtr client = FFI.new_client();
             FFI.drop_client(client);
             Assert.IsNull(client);
-        }
+        }*/
 
         [TestMethod]
-        public void marshall_id()
+        public void marshall_client_base()
         {
             IntPtr client = FFI.new_client();
-            byte[] id = new byte[16];
-            id = FFI.get_client_id(client);
-            Assert.AreNotEqual(id, new byte[16]);
+            MClientBase cb = new MClientBase();
+
+            FFI.get_client_base(client, ref cb);
+            Assert.IsNotNull(cb.key);
+            Assert.AreNotEqual(cb.key[0], 0);
         }
     }
 }

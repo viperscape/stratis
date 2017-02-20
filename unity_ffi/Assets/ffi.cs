@@ -8,17 +8,21 @@ namespace Assets
 {
     public class FFI
     {
+        public const byte ID_LEN = 16;
+        public const byte KEY_LEN = 20;
+
+
         [DllImport("stratis_unity")]
         public static extern IntPtr new_client();
 
         [DllImport("stratis_unity")]
         public static extern void drop_client(IntPtr cptr);
 
-        [DllImport("stratis_unity")]
-        public static extern Byte[] get_client_id(IntPtr cptr); // TODO: actually marshall data
+        // -- //
 
         [DllImport("stratis_unity")]
-        public static extern Byte[] get_client_key(IntPtr cptr);
+        public static extern void get_client_base(IntPtr cptr, [In][Out] ref MClientBase cb);
+
 
         [DllImport("stratis_unity")]
         public static extern IntPtr default_client(Byte[] key, Byte[] id);
@@ -42,5 +46,17 @@ namespace Assets
 
         //[DllImport("stratis_unity")]
         //public static extern bool get_client_chat(IntPtr cptr, ChatFrame chat);
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct MClientBase
+    {
+        [MarshalAs(UnmanagedType.ByValArray, 
+            ArraySubType = UnmanagedType.U1, SizeConst = FFI.ID_LEN)]
+        public byte[] id;
+
+        [MarshalAs(UnmanagedType.ByValArray,
+            ArraySubType = UnmanagedType.U1, SizeConst = FFI.KEY_LEN)]
+        public byte[] key;
     }
 }
