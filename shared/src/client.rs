@@ -17,6 +17,9 @@ use player::Player;
 use chat::{read_text,write_text, text_as_bytes};
 use opcode;
 
+pub const KEY_LEN: usize = 20;
+pub const ID_LEN: usize = 16;
+
 #[derive(Debug,Clone)]
 pub struct ClientBase {
     pub key: Vec<u8>,
@@ -33,7 +36,7 @@ pub struct Client {
 
 impl Client {
     #[allow(dead_code)]
-    pub fn default (key: [u8;20], uuid: Uuid) -> Client {
+    pub fn default (key: [u8;KEY_LEN], uuid: Uuid) -> Client {
         Client { base: ClientBase { key:From::from(&key[..]),
                                     id:uuid, },
                  stream: None,
@@ -84,8 +87,8 @@ impl Client {
     }
 
     pub fn load<S:Read> (s: &mut S) -> Option<Client> {
-        let mut key = [0u8;20];
-        let mut id = [0u8;16];
+        let mut key = [0u8;KEY_LEN];
+        let mut id = [0u8;ID_LEN];
         if let Ok(_) = s.read_exact(&mut key) {
             if let Ok(_) = s.read_exact(&mut id) {
                 if let Ok(id) = Uuid::from_bytes(&id) {
@@ -111,7 +114,7 @@ impl Client {
         let mut c = self.clone();
         if let Some(ref s) = self.stream {
             if let Ok(ref mut s) = s.lock() {
-                let mut m = [0u8;16];
+                let mut m = [0u8;ID_LEN];
                 if let Ok(_) = s.read_exact(&mut m) {
                     s.write_all(&[0]);
                     let hm = hmacsha1::hmac_sha1(&self.base.key, &m);
@@ -183,7 +186,7 @@ impl Client {
                 match cmd[0] {
                     opcode::CHAT => { // chat
                         if let Some(text) = read_text(&mut s) {
-                            let mut id = [0u8;16];
+                            let mut id = [0u8;ID_LEN];
                             if let Ok(_) = s.read_exact(&mut id) {
                                 if let Ok(uuid) = Uuid::from_bytes(&id) {
                                     if let Ok(ref mut msg) = self.msg.lock() {
