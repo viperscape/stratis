@@ -35,9 +35,9 @@ namespace Assets
         public static extern void client_register(IntPtr cptr);
 
         [DllImport("stratis_unity")]
-        public static extern bool client_save(IntPtr cptr);
+        public static extern byte client_save(IntPtr cptr);
         [DllImport("stratis_unity")]
-        public static extern bool client_load(IntPtr cptr);
+        public static extern byte client_load(IntPtr cptr);
 
         [DllImport("stratis_unity")]
         public static extern void client_chat(IntPtr cptr, String s);
