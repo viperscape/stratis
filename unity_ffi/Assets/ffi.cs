@@ -77,4 +77,21 @@ namespace Assets
             return System.Text.Encoding.UTF8.GetString(this.msg, 0, len);
         }
     }
+
+    // implicit byte transform for marshalling boolean
+    public class MBool
+    {
+        private byte inner;
+        public MBool (byte b) { inner = b; }
+
+        public static implicit operator bool(MBool b)
+        {
+            return Convert.ToBoolean(b.inner);
+        }
+
+        public static implicit operator MBool(byte b)
+        {
+            return new MBool(b);
+        }
+    }
 }

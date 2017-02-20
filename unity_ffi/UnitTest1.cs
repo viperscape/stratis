@@ -35,13 +35,13 @@ namespace FFI_TESTS
 
             // connect and login
             {
-                byte r = FFI.client_connect(client, "127.0.0.1:9996");
-                Assert.AreEqual(r, 1);
+                MBool r = FFI.client_connect(client, "127.0.0.1:9996");
+                Assert.IsTrue(r);
             }
             FFI.client_register(client);
             {
-                byte r = FFI.client_login(client);
-                Assert.AreEqual(r, 1);
+                MBool r = FFI.client_login(client);
+                Assert.IsTrue(r);
             }
 
             //send something
