@@ -13,9 +13,12 @@ namespace FFI_TESTS
         public void smoke()
         {
             IntPtr client = FFI.new_client();
+            
             FFI.drop_client(client);
-            System.Threading.Thread.Sleep(100);
-            Assert.IsNull(client);
+            MBool is_null = FFI.drop_client(client);
+
+            Assert.IsTrue(is_null);
+            Assert.AreEqual(client, IntPtr.Zero);
         }
 
         [TestMethod]

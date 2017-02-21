@@ -43,9 +43,12 @@ pub extern fn default_client(key: [u8;KEY_LEN], uuid: [u8;ID_LEN]) -> *mut Clien
 }
 
 #[no_mangle]
-pub extern fn drop_client(cptr: *mut Client) {
-    let bc: Box<Client> = unsafe { Box::from_raw(cptr) };
-    drop(bc);
+pub extern fn drop_client(cptr: *mut Client) -> u8 {
+    if cptr.is_null() { return true as u8 }
+    
+    unsafe { Box::from_raw(cptr); }
+
+    cptr.is_null() as u8
 }
 
 

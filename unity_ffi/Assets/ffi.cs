@@ -16,7 +16,7 @@ namespace Assets
         public static extern IntPtr new_client();
 
         [DllImport("stratis_unity")]
-        public static extern void drop_client(IntPtr cptr);
+        public static extern byte drop_client(IntPtr cptr);
 
         // -- //
 
