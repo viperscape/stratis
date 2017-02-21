@@ -1,11 +1,9 @@
 extern crate stratis_shared as shared;
 
 use std::mem::transmute;
-use std::io::Write;
-use std::net::Shutdown;
 
 use std::os::raw::c_char;
-use std::ffi::{CStr,CString};
+use std::ffi::{CStr};
 use std::str;
 use std::str::Utf8Error;
 
@@ -46,20 +44,14 @@ pub extern fn default_client(key: [u8;KEY_LEN], uuid: [u8;ID_LEN]) -> *mut Clien
 
 #[no_mangle]
 pub extern fn drop_client(cptr: *mut Client) {
-    let mut bc = unsafe { Box::from_raw(cptr) };
-   /* if let Some(ref mut ms) = bc.stream {
-        if let Ok(mut s) = ms.lock() {
-            let _ = s.flush();
-            let _ = s.shutdown(Shutdown::Both);
-        }
-    }*/
+    let bc: Box<Client> = unsafe { Box::from_raw(cptr) };
     drop(bc);
 }
 
 
 #[no_mangle]
 pub extern fn get_client_base(cptr: *mut Client, cb: &mut MClientBase) {
-    let mut client = unsafe { &mut *cptr };
+    let client = unsafe { &mut *cptr };
 
     let mut key = [0u8;KEY_LEN];
     for (i,n) in client.key().iter().enumerate() {
@@ -101,7 +93,7 @@ pub extern fn client_save(cptr: *mut Client) -> bool {
 pub extern fn client_load(cptr: *mut Client) -> bool {
     let mut client = unsafe { &mut *cptr };
     if let Some(c) = Client::load_file("client.key") {
-        client.base = c.base;
+        client.base = c.base.clone();
         true
     }
     else { false }

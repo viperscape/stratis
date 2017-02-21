@@ -9,13 +9,14 @@ namespace FFI_TESTS
     [TestClass]
     public class UnitTest1
     {
-        /*[TestMethod]
+        [TestMethod]
         public void smoke()
         {
             IntPtr client = FFI.new_client();
             FFI.drop_client(client);
+            System.Threading.Thread.Sleep(100);
             Assert.IsNull(client);
-        }*/
+        }
 
         [TestMethod]
         public void marshall_client_base()

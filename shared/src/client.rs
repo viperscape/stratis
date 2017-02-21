@@ -5,7 +5,7 @@ extern crate byteorder;
 use self::uuid::Uuid;
 
 use std::io::prelude::*;
-
+use std::net::Shutdown;
 use std::fs::File;
 use std::net::TcpStream;
 use std::collections::HashMap;
@@ -211,3 +211,13 @@ impl Client {
     }
 }
 
+impl Drop for Client {
+    fn drop (&mut self) {
+        if let Some(ref mut ms) = self.stream {
+            if let Ok(mut s) = ms.lock() {
+                let _ = s.flush();
+                let _ = s.shutdown(Shutdown::Both);
+            }
+        }
+    }
+}
