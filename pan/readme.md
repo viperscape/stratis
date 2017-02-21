@@ -16,8 +16,10 @@ build database using postgres username and password:
 In order to manage the STRATIS server, Environment Variable must first be present:  
 ```STRATIS``` with a value of the folder where the stratis source is
 
-to run the watcher for the debug build:  
+To run the watcher for the debug build:  
 ```pan -wd```
+
+If you are building the client for Unity3d, make sure ```STRATIS_UNITY``` points to your unity3d project, and you can run ```pan -rwd``` to have it build and run the server, then when you build the unity subproject the dynamic library will be copied into the unity_ffi subproject. At this point you must manually copy this Assets folder to your unity game project.
 
 [@hannobraun]: https://github.com/hannobraun
 [VNDF]: https://github.com/hannobraun/vndf
