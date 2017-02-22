@@ -16,23 +16,23 @@ pub fn watcher (matches: &getopts::Matches) {
     if !matches.opt_present("w") { return }
     
     let stratis_project = env::var("STRATIS").expect("no \'STRATIS\' path found in environment vars");
-    let stratis_path;
-    let stratis_dest;
+    let server_path;
+    let server_dest;
     
-    let unity_path;
-    let unity_dest = env::var("STRATIS_UNITY");
+    let ffi_path;
+    let ffi_dest = env::var("STRATIS_LINK");
     
     if matches.opt_present("d") {
-        stratis_path = stratis_project.clone() + "\\server\\target\\debug\\";
-        stratis_dest = stratis_path.clone()+"PAN_stratis.exe";
+        server_path = stratis_project.clone() + "\\server\\target\\debug\\";
+        server_dest = server_path.clone()+"PAN_stratis.exe";
 
-        unity_path = stratis_project.clone()+"\\unity\\target\\debug";
+        ffi_path = stratis_project.clone()+"\\ffi\\target\\debug\\";
     }
     else {
-        stratis_path = stratis_project.clone() + "\\server\\target\\release\\";
-        stratis_dest = stratis_path.clone()+"\\PAN_stratis.exe";
+        server_path = stratis_project.clone() + "\\server\\target\\release\\";
+        server_dest = server_path.clone()+"\\PAN_stratis.exe";
 
-        unity_path = stratis_project.clone()+"\\unity\\target\\release";
+        ffi_path = stratis_project.clone()+"\\ffi\\target\\release\\";
     }
 
     
@@ -41,11 +41,11 @@ pub fn watcher (matches: &getopts::Matches) {
     let (tx, rx) = channel();
     let mut w = self::notify::watcher(tx,Duration::from_secs(1)).expect("unable to create filesys watcher");
 
-    w.watch(stratis_path.clone()+"\\stratis.exe",RecursiveMode::NonRecursive);
+    let _ = w.watch(server_path.clone()+"stratis.exe",RecursiveMode::NonRecursive);
     
-    if let Ok(ref dest) = unity_dest {
-        println!("watching stratis_unity builds for:{:?}",dest);
-        w.watch(unity_path.clone()+"\\stratis_unity.dll",RecursiveMode::NonRecursive);
+    if let Ok(ref dest) = ffi_dest {
+        println!("watching stratis_ffi builds for:{:?}",dest);
+        let _ = w.watch(ffi_path.clone()+"stratis_ffi.dll",RecursiveMode::NonRecursive);
     }
 
     
@@ -56,7 +56,7 @@ pub fn watcher (matches: &getopts::Matches) {
             .current_dir(stratis_project.clone() + "\\server\\")
             .arg("build")
             .status().expect("failed to build stratis server").success() {
-                spawn_handle = spawn(&stratis_dest);
+                spawn_handle = spawn(&server_dest);
             }
     }
     
@@ -66,22 +66,22 @@ pub fn watcher (matches: &getopts::Matches) {
         
         match n {
             DebouncedEvent::Write(path) => {
-                if path == path::PathBuf::from(stratis_path.clone()+"stratis.exe") {
+                if path == path::PathBuf::from(server_path.clone()+"stratis.exe") {
                     if let Some(ref mut h) = spawn_handle {
                         if let Ok(_) = h.kill() {
                             println!("process-killed\n");
                             thread::sleep(Duration::from_secs(1));
                             
-                            if let Ok(r) = fs::copy(&path,&stratis_dest) {
+                            if let Ok(r) = fs::copy(&path,&server_dest) {
                                 println!("watcher-copy:{:?}",r);
-                                new_spawn_handle = spawn(&stratis_dest);
+                                new_spawn_handle = spawn(&server_dest);
                             }
                         }
                     }
                     else { //no child process alive?
-                        if let Ok(r) = fs::copy(&path,&stratis_dest) {
+                        if let Ok(r) = fs::copy(&path,&server_dest) {
                             println!("watcher-copy:{:?}",r);
-                            new_spawn_handle = spawn(&stratis_dest);
+                            new_spawn_handle = spawn(&server_dest);
                         }
                     }
 
@@ -90,13 +90,13 @@ pub fn watcher (matches: &getopts::Matches) {
                         println!("process-spawned:{:?}\n",h.id());
                     }
                 }
-                else if path == path::PathBuf::from(unity_path.clone()+"\\stratis_unity.dll") {
-                    if let Ok(ref unity_dest) = unity_dest {
-                        println!("copying unity dll");
-                        let r = fs::copy(&path,stratis_project.clone()+"\\unity_ffi\\stratis_unity.dll"); // we do this because VS is stupid
+                else if path == path::PathBuf::from(ffi_path.clone()+"stratis_ffi.dll") {
+                    if let Ok(_) = ffi_dest { //TODO: copy dll to STRATIS_LINK path?
+                        println!("copying ffi dll");
+                        let r = fs::copy(&path,stratis_project.clone()+"\\unity_ffi\\stratis_ffi.dll"); // we do this because VS is stupid
                         println!("watcher-copy:{:?}",r);
                         
-                        let r = fs::copy(&path,stratis_project.clone()+"\\unity_ffi\\Assets\\Plugins\\stratis_unity.dll");
+                        let r = fs::copy(&path,stratis_project.clone()+"\\unity_ffi\\Assets\\Plugins\\stratis_ffi.dll");
                         println!("watcher-copy:{:?}",r);
                     }
                 }

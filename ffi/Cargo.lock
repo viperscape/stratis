@@ -1,5 +1,5 @@
 [root]
-name = "stratis-unity"
+name = "stratis-ffi"
 version = "0.1.0"
 dependencies = [
  "stratis-shared 0.1.0",

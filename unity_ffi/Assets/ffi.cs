@@ -12,39 +12,39 @@ namespace Assets
         public const byte KEY_LEN = 20;
         public const UInt16 MAX_TEXT_LEN = 2048;
 
-        [DllImport("stratis_unity")]
+        [DllImport("stratis_ffi")]
         public static extern IntPtr new_client();
 
-        [DllImport("stratis_unity")]
+        [DllImport("stratis_ffi")]
         public static extern byte drop_client(IntPtr cptr);
 
         // -- //
 
-        [DllImport("stratis_unity")]
+        [DllImport("stratis_ffi")]
         public static extern void get_client_base(IntPtr cptr, [In][Out] ref MClientBase cb);
 
 
-        [DllImport("stratis_unity")]
+        [DllImport("stratis_ffi")]
         public static extern IntPtr default_client(Byte[] key, Byte[] id);
 
-        [DllImport("stratis_unity")]
+        [DllImport("stratis_ffi")]
         public static extern byte client_connect(IntPtr cptr, String s);
-        [DllImport("stratis_unity")]
+        [DllImport("stratis_ffi")]
         public static extern byte client_login(IntPtr cptr);
-        [DllImport("stratis_unity")]
+        [DllImport("stratis_ffi")]
         public static extern void client_register(IntPtr cptr);
 
-        [DllImport("stratis_unity")]
+        [DllImport("stratis_ffi")]
         public static extern byte client_save(IntPtr cptr);
-        [DllImport("stratis_unity")]
+        [DllImport("stratis_ffi")]
         public static extern byte client_load(IntPtr cptr);
 
-        [DllImport("stratis_unity")]
+        [DllImport("stratis_ffi")]
         public static extern void client_chat(IntPtr cptr, String s);
-        [DllImport("stratis_unity")]
+        [DllImport("stratis_ffi")]
         public static extern void client_nick(IntPtr cptr, String s);
 
-        [DllImport("stratis_unity")]
+        [DllImport("stratis_ffi")]
         [return: MarshalAs(UnmanagedType.U2)]
         public static extern UInt16 get_client_chat(IntPtr cptr, [In][Out] ref MChatFrame chat);
     }

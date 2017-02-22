@@ -67,7 +67,7 @@
     <Folder Include="Assets\Plugins\" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="stratis_unity.dll">
+    <Content Include="stratis_ffi.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
