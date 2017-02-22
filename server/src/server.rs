@@ -135,7 +135,7 @@ impl Server {
                     println!("registered ({:?}):{:?}",r, c.id());
 
                     if let Ok(mut clients) = server.clients.lock() {
-                        clients.push(c.base);
+                        clients.push(c.base.clone());
                     }
                 }
 
