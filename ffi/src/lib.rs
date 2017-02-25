@@ -31,15 +31,15 @@ fn str_from_ptr<'a> (s: *const c_char) -> Result<&'a str,Utf8Error> {
 
 #[no_mangle]
 pub extern fn default_client() -> *mut Client {
-    unsafe { transmute(Box::new(Client::new())) }
+    unsafe { transmute(Box::new(Client::default())) }
 }
 
 #[no_mangle]
 pub extern fn new_client(key: [u8;KEY_LEN], uuid: [u8;ID_LEN]) -> *mut Client {
     if let Ok(id) = Uuid::from_bytes(&uuid) {
-        unsafe { transmute(Box::new(Client::default(key, id))) }
+        unsafe { transmute(Box::new(Client::new(key, id))) }
     }
-    else { new_client() }
+    else { default_client() }
 }
 
 #[no_mangle]

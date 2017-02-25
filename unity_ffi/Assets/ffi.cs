@@ -13,7 +13,7 @@ namespace Assets
         public const UInt16 MAX_TEXT_LEN = 2048;
 
         [DllImport("stratis_ffi")]
-        public static extern IntPtr new_client();
+        public static extern IntPtr default_client();
 
         [DllImport("stratis_ffi")]
         public static extern byte drop_client(IntPtr cptr);
@@ -23,9 +23,6 @@ namespace Assets
         [DllImport("stratis_ffi")]
         public static extern void get_client_base(IntPtr cptr, [In][Out] ref MClientBase cb);
 
-
-        [DllImport("stratis_ffi")]
-        public static extern IntPtr default_client(Byte[] key, Byte[] id);
 
         [DllImport("stratis_ffi")]
         public static extern byte client_connect(IntPtr cptr, String s);

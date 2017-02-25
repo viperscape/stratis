@@ -12,7 +12,7 @@ namespace FFI_TESTS
         [TestMethod]
         public void smoke()
         {
-            IntPtr client = FFI.new_client();
+            IntPtr client = FFI.default_client();
             
             FFI.drop_client(client);
             MBool is_null = FFI.drop_client(client);
@@ -24,7 +24,7 @@ namespace FFI_TESTS
         [TestMethod]
         public void marshall_client_base()
         {
-            IntPtr client = FFI.new_client();
+            IntPtr client = FFI.default_client();
             MClientBase cb = new MClientBase();
 
             FFI.get_client_base(client, ref cb);
@@ -35,7 +35,7 @@ namespace FFI_TESTS
         [TestMethod]
         public void marshall_chat_frame()
         {
-            IntPtr client = FFI.new_client();
+            IntPtr client = FFI.default_client();
 
             // connect and login
             {
