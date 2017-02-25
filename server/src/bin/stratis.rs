@@ -23,7 +23,7 @@ fn main() {
         client.login();
     }
     else {
-        client = Client::new();
+        client = Client::default();
         Client::save(&client,"game/client.key");
         client.connect(ip_addr);
         client.register();

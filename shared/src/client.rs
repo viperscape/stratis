@@ -36,7 +36,7 @@ pub struct Client {
 
 impl Client {
     #[allow(dead_code)]
-    pub fn default (key: [u8;KEY_LEN], uuid: Uuid) -> Client {
+    pub fn new (key: [u8;KEY_LEN], uuid: Uuid) -> Client {
         Client { base: ClientBase { key:From::from(&key[..]),
                                     id:uuid, },
                  stream: None,
@@ -46,13 +46,13 @@ impl Client {
     }
     
     #[allow(unused_must_use)]
-    pub fn new () -> Client {        
+    pub fn default () -> Client {        
         let id = uuid::Uuid::new_v4();
         let m = hmacsha1::hmac_sha1(uuid::Uuid::new_v4().as_bytes(),
                                     id.as_bytes());
 
        
-        Client::default(m,id)
+        Client::new(m,id)
     }
     #[allow(unused_must_use)]
     pub fn save (client: &Client, path: &str) -> bool {
@@ -92,7 +92,7 @@ impl Client {
         if let Ok(_) = s.read_exact(&mut key) {
             if let Ok(_) = s.read_exact(&mut id) {
                 if let Ok(id) = Uuid::from_bytes(&id) {
-                    return Some(Client::default(key, id))
+                    return Some(Client::new(key, id))
                 }
                 else { println!("cannot uuid file") }
             }
