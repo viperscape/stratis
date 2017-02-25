@@ -101,6 +101,9 @@ impl Server {
                                         }
                                     }
                                 },
+                                opcode::PING => {
+                                    s.write_all(&[opcode::PING]);
+                                },
                                 _ => panic!("unknown cmd:{:?}",cmd)
                             }
                         }

@@ -168,6 +168,17 @@ impl Client {
         }
     }
 
+    #[allow(unused_must_use)]
+    pub fn ping (&mut self) -> bool {
+        if let Some(ref ms) = self.stream {
+            if let Ok(ref mut s) = ms.lock() {
+                return s.write_all(&[opcode::PING]).is_ok()
+            }
+        }
+
+        false
+    }
+
     
     fn handler (&mut self) {
         let mut cmd = [0u8;1];
@@ -184,7 +195,7 @@ impl Client {
         loop {
             if let Ok(_) = s.read_exact(&mut cmd) {
                 match cmd[0] {
-                    opcode::CHAT => { // chat
+                    opcode::CHAT => {
                         if let Some(text) = read_text(&mut s) {
                             let mut id = [0u8;ID_LEN];
                             if let Ok(_) = s.read_exact(&mut id) {
@@ -196,11 +207,14 @@ impl Client {
                             }
                         }
                     },
-                    opcode::PLAYER => { //player
+                    opcode::PLAYER => {
                         if let (Some(uuid),Some(player)) = Player::from_stream(&mut s, true) {
                             println!("player:{:?} {:?}", uuid, player);
                             self.cache.insert(uuid, player);
                         }
+                    },
+                    opcode::PING => {
+                        
                     },
                     _ => {
                         println!("unknown command {:?}",cmd)

@@ -18,6 +18,9 @@ namespace Assets
         [DllImport("stratis_ffi")]
         public static extern byte drop_client(IntPtr cptr);
 
+        [DllImport("stratis_ffi")]
+        public static extern byte ping_client(IntPtr cptr);
+
         // -- //
 
         [DllImport("stratis_ffi")]

@@ -29,6 +29,7 @@ fn str_from_ptr<'a> (s: *const c_char) -> Result<&'a str,Utf8Error> {
     str::from_utf8(cstr.to_bytes())
 }
 
+//TODO: move client to sub module
 #[no_mangle]
 pub extern fn default_client() -> *mut Client {
     unsafe { transmute(Box::new(Client::default())) }
@@ -124,9 +125,9 @@ pub extern fn client_nick(cptr: *mut Client, s: *const c_char) {
 //NOTE: this is meant to be polled on frame-tick
 #[no_mangle]
 pub extern fn get_client_chat(cptr: *mut Client, chat: &mut MChatFrame) -> u16 {
-    let client = unsafe { &mut *cptr };
+    let client = unsafe { & *cptr };
 
-    if let Ok(mut v) = client.msg.lock() {
+    if let Ok(mut v) = client.msg.lock() { //TODO: change to channel
         if v.len() > 0 {
             let (uuid, msg) = v.remove(0);
             
@@ -142,4 +143,11 @@ pub extern fn get_client_chat(cptr: *mut Client, chat: &mut MChatFrame) -> u16 {
     }
 
     0
+}
+
+
+#[no_mangle]
+pub extern fn ping (cptr: *mut Client) -> u8 {
+    let mut client = unsafe { &mut *cptr };
+    client.ping() as u8
 }
