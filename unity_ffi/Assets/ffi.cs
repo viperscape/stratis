@@ -18,9 +18,6 @@ namespace Assets
         [DllImport("stratis_ffi")]
         public static extern byte drop_client(IntPtr cptr);
 
-        [DllImport("stratis_ffi")]
-        public static extern byte ping_client(IntPtr cptr);
-
         // -- //
 
         [DllImport("stratis_ffi")]
@@ -47,6 +44,12 @@ namespace Assets
         [DllImport("stratis_ffi")]
         [return: MarshalAs(UnmanagedType.U2)]
         public static extern UInt16 get_client_chat(IntPtr cptr, [In][Out] ref MChatFrame chat);
+
+        [DllImport("stratis_ffi")]
+        public static extern float get_client_ping(IntPtr cptr);
+
+        [DllImport("stratis_ffi")]
+        public static extern byte is_client_connected(IntPtr cptr);
     }
 
     [StructLayout(LayoutKind.Sequential)]
