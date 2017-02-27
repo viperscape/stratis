@@ -4,6 +4,7 @@ extern crate byteorder;
 
 use self::uuid::Uuid;
 
+use std::time::{Instant,Duration};
 use std::io::prelude::*;
 use std::net::Shutdown;
 use std::fs::File;
@@ -32,6 +33,8 @@ pub struct Client {
     pub stream: Option<Arc<Mutex<TcpStream>>>,
     pub cache: HashMap<Uuid,Player>, //TODO: arc-mutex me
     pub msg: Arc<Mutex<Vec<(Uuid,String)>>>, //cached messages of inbound chat
+    pub ping_start: Instant,
+    pub ping_delta: f32,
 }
 
 impl Client {
@@ -42,6 +45,8 @@ impl Client {
                  stream: None,
                  cache: HashMap::new(),
                  msg: Arc::new(Mutex::new(vec!())),
+                 ping_start: Instant::now(),
+                 ping_delta: 0.0,
         }
     }
     
@@ -172,6 +177,7 @@ impl Client {
     pub fn ping (&mut self) -> bool {
         if let Some(ref ms) = self.stream {
             if let Ok(ref mut s) = ms.lock() {
+                self.ping_start = Instant::now();
                 return s.write_all(&[opcode::PING]).is_ok()
             }
         }
@@ -213,25 +219,49 @@ impl Client {
                             self.cache.insert(uuid, player);
                         }
                     },
-                    opcode::PING => {
-                        
+                    opcode::PING => { // recv server ping, respond
+                        if let Some(ref mut ms) = self.stream {
+                            if let Ok(mut s) = ms.lock() {
+                                let _ = s.write_all(&[opcode::PONG]);
+                            }
+                        }
+                    },
+                    opcode::PONG => { // recv client ping back?
+                        let time = self.ping_start.elapsed().as_secs();
+                        self.ping_delta = time as f32;
                     },
                     _ => {
                         println!("unknown command {:?}",cmd)
                     },
                 }
             }
+
+            // ping every so often
+            if self.ping_start.elapsed() > Duration::new(5, 0) {
+                self.ping_start = Instant::now();
+                if let Some(ref mut ms) = self.stream {
+                    if let Ok(mut s) = ms.lock() {
+                        let _ = s.write_all(&[opcode::PING]);
+                    }
+                }
+            }
         }
     }
-}
 
-impl Drop for Client {
-    fn drop (&mut self) {
+    pub fn shutdown(&mut self) {
         if let Some(ref mut ms) = self.stream {
             if let Ok(mut s) = ms.lock() {
                 let _ = s.flush();
                 let _ = s.shutdown(Shutdown::Both);
             }
         }
+
+        self.stream = None;
+    }
+}
+
+impl Drop for Client {
+    fn drop (&mut self) {
+        self.shutdown();
     }
 }

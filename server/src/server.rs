@@ -4,6 +4,7 @@ use std::collections::HashMap;
 use std::thread;
 use std::sync::{Arc, Mutex};
 use std::sync::mpsc::{Sender};
+use std::time::{Instant,Duration};
 
 use std::io::prelude::*;
 
@@ -64,6 +65,7 @@ impl Server {
     #[allow(unused_must_use)]
     fn handler (mut server: Server, mut s: TcpStream) {
         let mut cmd = [0;1];
+        let mut time = Instant::now(); //TODO: ping every so often
                 
         //new conn needs auth code
         let m = uuid::Uuid::new_v4();
@@ -102,7 +104,12 @@ impl Server {
                                     }
                                 },
                                 opcode::PING => {
-                                    s.write_all(&[opcode::PING]);
+                                    s.write_all(&[opcode::PONG]);
+                                },
+                                opcode::PONG => {
+                                    if time.elapsed() > Duration::new(5, 0) {
+                                        panic!("unresponsive client {:?}",uuid)
+                                    }
                                 },
                                 _ => panic!("unknown cmd:{:?}",cmd)
                             }
@@ -111,6 +118,14 @@ impl Server {
                 }
             }
             else { break } //drop dead client
+
+            // ping every so often
+            if let Some(uuid) = client_id {
+                if time.elapsed() > Duration::new(15, 0) {
+                    time = Instant::now();
+                    server.dist.send(DistKind::Select(uuid,vec![opcode::PING]));
+                }
+            }
         }
 
         println!("client dropped");

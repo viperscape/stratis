@@ -147,7 +147,13 @@ pub extern fn get_client_chat(cptr: *mut Client, chat: &mut MChatFrame) -> u16 {
 
 
 #[no_mangle]
-pub extern fn ping (cptr: *mut Client) -> u8 {
-    let mut client = unsafe { &mut *cptr };
-    client.ping() as u8
+pub extern fn is_client_connected (cptr: *mut Client) -> u8 {
+    let client = unsafe { & *cptr };
+    client.stream.is_some() as u8
+}
+
+#[no_mangle]
+pub extern fn get_client_ping (cptr: *mut Client) -> f32 {
+    let client = unsafe { & *cptr };
+    client.ping_delta
 }
