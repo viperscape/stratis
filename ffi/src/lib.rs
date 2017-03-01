@@ -76,6 +76,14 @@ pub extern fn client_connect(cptr: *mut Client, s: *const c_char) -> u8 {
     client.stream.is_some() as u8
 }
 #[no_mangle]
+pub extern fn client_disconnect(cptr: *mut Client) -> u8 {
+    let mut client = unsafe { &mut *cptr };
+    client.shutdown();
+    client.stream.is_none() as u8
+}
+
+
+#[no_mangle]
 pub extern fn client_login(cptr: *mut Client) -> u8 {
     let mut client = unsafe { &mut *cptr };
     client.login() as u8
@@ -154,6 +162,11 @@ pub extern fn is_client_connected (cptr: *mut Client) -> u8 {
 
 #[no_mangle]
 pub extern fn get_client_ping (cptr: *mut Client) -> f32 {
-    let client = unsafe { & *cptr };
-    client.ping_delta
+    let mut client = unsafe { &mut *cptr };
+    if let Ok(delta) = client.ping_delta.lock() {
+        return *delta
+    }
+
+    client.shutdown();
+    0.0
 }

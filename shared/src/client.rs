@@ -34,7 +34,7 @@ pub struct Client {
     pub cache: HashMap<Uuid,Player>, //TODO: arc-mutex me
     pub msg: Arc<Mutex<Vec<(Uuid,String)>>>, //cached messages of inbound chat
     pub ping_start: Instant,
-    pub ping_delta: f32,
+    pub ping_delta: Arc<Mutex<f32>>,
 }
 
 impl Client {
@@ -46,7 +46,7 @@ impl Client {
                  cache: HashMap::new(),
                  msg: Arc::new(Mutex::new(vec!())),
                  ping_start: Instant::now(),
-                 ping_delta: 0.0,
+                 ping_delta: Arc::new(Mutex::new(0.0)),
         }
     }
     
@@ -178,9 +178,8 @@ impl Client {
         if let Some(ref ms) = self.stream {
             if let Ok(ref mut s) = ms.lock() {
                 self.ping_start = Instant::now();
-                if let Ok(_) = s.write_all(&[opcode::PING]) {
-                    return s.flush().is_ok()
-                }
+                
+                return s.write(&[opcode::PING]).is_ok()
             }
         }
 
@@ -196,9 +195,9 @@ impl Client {
             if let Ok(s_) = ms.lock() {
                 s = s_.try_clone().unwrap();
             }
-            else { panic!("client stream mutex poisoned") }
+            else { return } //mutex poisoned
         }
-        else { panic!("no client stream available") }
+        else { return }
 
         self.ping();
         
@@ -231,7 +230,9 @@ impl Client {
                         }
                     },
                     opcode::PONG => { // recv client ping back?
-                        self.ping_delta = self.ping_start.elapsed().as_secs() as f32;
+                        if let Ok(mut delta) = self.ping_delta.lock() {
+                            *delta = self.ping_start.elapsed().as_secs() as f32;
+                        }
                     },
                     _ => {
                         println!("unknown command {:?}",cmd)
@@ -240,13 +241,18 @@ impl Client {
             }
 
             // check ping delay, shutdown
-            if self.ping_delta > 5.0 { self.shutdown(); break 'handler }
+            if let Ok(mut delta) = self.ping_delta.lock() {
+                *delta += self.ping_start.elapsed().as_secs() as f32;
+                if *delta > 8.0 { break 'handler }
+            }
             
             // ping every so often
             if self.ping_start.elapsed() > Duration::new(5, 0) {
-                if !self.ping() { self.shutdown(); break 'handler }
+                if !self.ping() { break 'handler }
             }
         }
+
+        self.shutdown();
     }
 
     pub fn shutdown(&mut self) {

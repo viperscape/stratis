@@ -27,6 +27,9 @@ namespace Assets
         [DllImport("stratis_ffi")]
         public static extern byte client_connect(IntPtr cptr, String s);
         [DllImport("stratis_ffi")]
+        public static extern byte client_disconnect(IntPtr cptr);
+
+        [DllImport("stratis_ffi")]
         public static extern byte client_login(IntPtr cptr);
         [DllImport("stratis_ffi")]
         public static extern void client_register(IntPtr cptr);
