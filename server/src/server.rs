@@ -105,6 +105,7 @@ impl Server {
                                 },
                                 opcode::PING => {
                                     s.write_all(&[opcode::PONG]);
+                                    println!("ping");
                                 },
                                 opcode::PONG => {
                                     if time.elapsed() > Duration::new(5, 0) {

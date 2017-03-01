@@ -4,6 +4,7 @@ use stratis::{Client,Server};
 
 use std::io;
 use std::thread;
+use std::sync::{Arc, Mutex};
 
 
 #[allow(unused_must_use)]
@@ -12,28 +13,31 @@ fn main() {
     
     let ip_addr = "127.0.0.1:9996";
     
-    let _server_thread = thread::spawn(move || {
+    //let _server_thread = thread::spawn(move || {
         Server::new(ip_addr);
-    });
-    
-    let mut client;
-    if let Some(c) = Client::load_file("game/client.key") {
-        client = c;
-        client.connect(ip_addr);
-        client.login();
+    //});
+
+    /*
+    let client;
+    if let Some(mut c) = Client::load_file("game/client.key") {
+        c.connect(ip_addr);
+        client = Arc::new(Mutex::new(c));
+        Client::login(&client);
     }
     else {
-        client = Client::default();
-        Client::save(&client,"game/client.key");
-        client.connect(ip_addr);
-        client.register();
-        client.login();
+        let mut c = Client::default();
+        Client::save(&c,"game/client.key");
+        c.connect(ip_addr);
+        c.register();
+        client = Arc::new(Mutex::new(c));
+        Client::login(&client);
     }
     
     
     let mut chat = true;
     loop {
         input.clear();
+        let mut client = client.lock().unwrap();
         
         if let Ok(_) = io::stdin().read_line(&mut input) {
             let cmd = input.trim();
@@ -57,4 +61,5 @@ fn main() {
             }            
         }
     }
+     */
 }

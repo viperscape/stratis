@@ -27,14 +27,14 @@ pub struct ClientBase {
     pub id: Uuid,
 }
 
-#[derive(Debug,Clone)]
+#[derive(Debug)]
 pub struct Client {
     pub base: ClientBase,
-    pub stream: Option<Arc<Mutex<TcpStream>>>,
-    pub cache: HashMap<Uuid,Player>, //TODO: arc-mutex me
-    pub msg: Arc<Mutex<Vec<(Uuid,String)>>>, //cached messages of inbound chat
+    pub stream: Option<TcpStream>,
+    pub cache: HashMap<Uuid,Player>,
+    pub msg: Vec<(Uuid,String)>, //cached messages of inbound chat
     pub ping_start: Instant,
-    pub ping_delta: Arc<Mutex<f32>>,
+    pub ping_delta: f32,
 }
 
 impl Client {
@@ -44,9 +44,9 @@ impl Client {
                                     id:uuid, },
                  stream: None,
                  cache: HashMap::new(),
-                 msg: Arc::new(Mutex::new(vec!())),
+                 msg: vec!(),
                  ping_start: Instant::now(),
-                 ping_delta: Arc::new(Mutex::new(0.0)),
+                 ping_delta: 0.0,
         }
     }
     
@@ -109,27 +109,30 @@ impl Client {
     #[allow(unused_must_use)]
     pub fn connect (&mut self, server: &str)  {
         if let Ok(s) = TcpStream::connect(server) {
-            self.stream = Some(Arc::new(Mutex::new(s)));
+            self.stream = Some(s);
         }
-        else { println!("cannot connect to server {:?}",server) }
     }
 
     #[allow(unused_must_use)]
-    pub fn login (&mut self) -> bool {
-        let mut c = self.clone();
-        if let Some(ref s) = self.stream {
-            if let Ok(ref mut s) = s.lock() {
+    pub fn login (client: &Arc<Mutex<Client>>) -> bool {
+        let c = client.clone();
+        if let Ok(ref mut client) = client.lock() {
+            let base = client.base.clone();
+            
+            if let Some(ref mut s) = client.stream {
+                
                 let mut m = [0u8;ID_LEN];
                 if let Ok(_) = s.read_exact(&mut m) {
                     s.write_all(&[0]);
-                    let hm = hmacsha1::hmac_sha1(&self.base.key, &m);
+                    
+                    let hm = hmacsha1::hmac_sha1(&base.key, &m);
                     
                     s.write_all(&hm);
-                    s.write_all(self.base.id.as_bytes());
+                    s.write_all(base.id.as_bytes());
 
                     
                     thread::spawn(move || {
-                        c.handler()
+                        Client::handler(c)
                     });
 
                     return true
@@ -142,64 +145,56 @@ impl Client {
 
     #[allow(unused_must_use)]
     pub fn register (&mut self) {
-        if let Some(ref ms) = self.stream {
-            if let Ok(ref mut s) = ms.lock() {
-                s.write_all(&[1]);
-                s.write_all(&self.base.key);
-                s.write_all(self.base.id.as_bytes());
-            }
+        if let Some(ref mut s) = self.stream {
+            s.write_all(&[1]);
+            s.write_all(&self.base.key);
+            s.write_all(self.base.id.as_bytes());
         }
     }
 
     #[allow(unused_must_use)]
     pub fn chat (&mut self, text: &str) {
-        if let Some(ref ms) = self.stream {
-            if let Ok(ref mut s) = ms.lock() {
-                write_text(s, text);
-            }
+        if let Some(ref mut s) = self.stream {
+            write_text(s, text);
         }
     }
 
     #[allow(unused_must_use)]
     pub fn nick (&mut self, nick: &str) {
-        if let Some(ref ms) = self.stream {
-            if let Ok(ref mut s) = ms.lock() {
-                let (mut data, bytes) = text_as_bytes(nick);
-                data[0] = 3; // specify nick route
+        if let Some(ref mut s) = self.stream {
+            let (mut data, bytes) = text_as_bytes(nick);
+            data[0] = opcode::PLAYER;
 
-                s.write_all(&data);
-                s.write_all(bytes);
-            }
+            s.write_all(&data);
+            s.write_all(bytes);
         }
     }
 
     #[allow(unused_must_use)]
     pub fn ping (&mut self) -> bool {
-        if let Some(ref ms) = self.stream {
-            if let Ok(ref mut s) = ms.lock() {
-                self.ping_start = Instant::now();
-                
-                return s.write(&[opcode::PING]).is_ok()
-            }
+        if let Some(ref mut s) = self.stream {
+            self.ping_start = Instant::now();
+            
+            return s.write(&[opcode::PING]).is_ok()
         }
 
         false
     }
 
     
-    fn handler (&mut self) {
+    fn handler (client: Arc<Mutex<Client>>) {
         let mut cmd = [0u8;1];
         let mut s; // NOTE: this should be read from only!
 
-        if let Some(ref ms) = self.stream {
-            if let Ok(s_) = ms.lock() {
+        if let Ok(mut client) = client.lock() {
+            client.ping();
+            
+            if let Some(ref s_) = client.stream {
                 s = s_.try_clone().unwrap();
             }
-            else { return } //mutex poisoned
+            else { return }
         }
         else { return }
-
-        self.ping();
         
         'handler: loop {
             if let Ok(_) = s.read_exact(&mut cmd) {
@@ -209,8 +204,8 @@ impl Client {
                             let mut id = [0u8;ID_LEN];
                             if let Ok(_) = s.read_exact(&mut id) {
                                 if let Ok(uuid) = Uuid::from_bytes(&id) {
-                                    if let Ok(ref mut msg) = self.msg.lock() {
-                                        msg.push((uuid,text));
+                                    if let Ok(mut client) = client.lock() {
+                                        client.msg.push((uuid,text));
                                     }
                                 }
                             }
@@ -218,49 +213,48 @@ impl Client {
                     },
                     opcode::PLAYER => {
                         if let (Some(uuid),Some(player)) = Player::from_stream(&mut s, true) {
-                            println!("player:{:?} {:?}", uuid, player);
-                            self.cache.insert(uuid, player);
+                            if let Ok(mut client) = client.lock() {
+                                client.cache.insert(uuid, player);
+                            }
                         }
                     },
                     opcode::PING => { // recv server ping, respond
-                        if let Some(ref mut ms) = self.stream {
-                            if let Ok(mut s) = ms.lock() {
+                        if let Ok(mut client) = client.lock() {
+                            if let Some(ref mut s) = client.stream {
                                 let _ = s.write_all(&[opcode::PONG]);
                             }
                         }
                     },
                     opcode::PONG => { // recv client ping back?
-                        if let Ok(mut delta) = self.ping_delta.lock() {
-                            *delta = self.ping_start.elapsed().as_secs() as f32;
+                        if let Ok(mut client) = client.lock() {
+                            client.ping_delta = client.ping_start.elapsed().as_secs() as f32;
                         }
                     },
-                    _ => {
-                        println!("unknown command {:?}",cmd)
-                    },
+                    _ => { },
                 }
             }
 
             // check ping delay, shutdown
-            if let Ok(mut delta) = self.ping_delta.lock() {
-                *delta += self.ping_start.elapsed().as_secs() as f32;
-                if *delta > 8.0 { break 'handler }
-            }
-            
-            // ping every so often
-            if self.ping_start.elapsed() > Duration::new(5, 0) {
-                if !self.ping() { break 'handler }
+            if let Ok(mut client) = client.lock() {
+                client.ping_delta += client.ping_start.elapsed().as_secs() as f32;
+                if client.ping_delta > 8.0 { break 'handler }
+                
+                // ping every so often
+                if client.ping_start.elapsed() > Duration::new(5, 0) {
+                    if !client.ping() { break 'handler }
+                }
             }
         }
 
-        self.shutdown();
+        if let Ok(mut client) = client.lock() {
+            client.shutdown();
+        }
     }
 
     pub fn shutdown(&mut self) {
-        if let Some(ref mut ms) = self.stream {
-            if let Ok(mut s) = ms.lock() {
-                let _ = s.flush();
-                let _ = s.shutdown(Shutdown::Both);
-            }
+        if let Some(ref mut s) = self.stream {
+            let _ = s.flush();
+            let _ = s.shutdown(Shutdown::Both);
         }
 
         self.stream = None;
