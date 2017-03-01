@@ -1,4 +1,4 @@
-use std::net::{TcpListener, TcpStream};
+use std::net::{TcpListener, TcpStream, Shutdown};
 use std::collections::HashMap;
 
 use std::thread;
@@ -73,7 +73,7 @@ impl Server {
 
         let mut client_id: Option<Uuid> = None;
         
-        loop {
+        'handler: loop {
             if let Ok(_) = s.read_exact(&mut cmd) {
                 match cmd[0] {
                     opcode::LOGIN => { //login
@@ -108,16 +108,16 @@ impl Server {
                                 },
                                 opcode::PONG => {
                                     if time.elapsed() > Duration::new(5, 0) {
-                                        panic!("unresponsive client {:?}",uuid)
+                                        break 'handler
                                     }
                                 },
-                                _ => panic!("unknown cmd:{:?}",cmd)
+                                _ => break 'handler
                             }
                         }
                     }
                 }
             }
-            else { break } //drop dead client
+            else { break 'handler } //drop dead client
 
             // ping every so often
             if let Some(uuid) = client_id {
@@ -129,6 +129,12 @@ impl Server {
         }
 
         println!("client dropped");
+        let _ = s.flush();
+        let _ = s.shutdown(Shutdown::Both);
+
+        if let Some(uuid) = client_id {
+            server.dist.send(DistKind::Remove(uuid));
+        }
     }
 
     fn register (server: &mut Server,

@@ -178,7 +178,9 @@ impl Client {
         if let Some(ref ms) = self.stream {
             if let Ok(ref mut s) = ms.lock() {
                 self.ping_start = Instant::now();
-                return s.write_all(&[opcode::PING]).is_ok()
+                if let Ok(_) = s.write_all(&[opcode::PING]) {
+                    return s.flush().is_ok()
+                }
             }
         }
 
@@ -197,8 +199,10 @@ impl Client {
             else { panic!("client stream mutex poisoned") }
         }
         else { panic!("no client stream available") }
+
+        self.ping();
         
-        loop {
+        'handler: loop {
             if let Ok(_) = s.read_exact(&mut cmd) {
                 match cmd[0] {
                     opcode::CHAT => {
@@ -227,8 +231,7 @@ impl Client {
                         }
                     },
                     opcode::PONG => { // recv client ping back?
-                        let time = self.ping_start.elapsed().as_secs();
-                        self.ping_delta = time as f32;
+                        self.ping_delta = self.ping_start.elapsed().as_secs() as f32;
                     },
                     _ => {
                         println!("unknown command {:?}",cmd)
@@ -236,14 +239,12 @@ impl Client {
                 }
             }
 
+            // check ping delay, shutdown
+            if self.ping_delta > 5.0 { self.shutdown(); break 'handler }
+            
             // ping every so often
             if self.ping_start.elapsed() > Duration::new(5, 0) {
-                self.ping_start = Instant::now();
-                if let Some(ref mut ms) = self.stream {
-                    if let Ok(mut s) = ms.lock() {
-                        let _ = s.write_all(&[opcode::PING]);
-                    }
-                }
+                if !self.ping() { self.shutdown(); break 'handler }
             }
         }
     }
