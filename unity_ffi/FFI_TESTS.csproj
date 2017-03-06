@@ -56,7 +56,10 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="Assets\Chat.cs" />
+    <Compile Include="Assets\Client.cs" />
     <Compile Include="Assets\ffi.cs" />
+    <Compile Include="Assets\Timer.cs" />
     <Compile Include="UnitTest1.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

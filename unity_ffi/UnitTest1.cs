@@ -19,7 +19,7 @@ namespace FFI_TESTS
         public void marshall_client_base()
         {
             Client client = new Client();
-            Client.MClientBase cb = Client.getBase();
+            Client.MClientBase cb = client.getBase();
             
             Assert.IsNotNull(cb.key);
             Assert.AreNotEqual(cb.key[0], 0);

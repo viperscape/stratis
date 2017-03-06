@@ -81,8 +81,9 @@ namespace Assets
             {
                 disposed = true;
                 drop_client(client);
-                Console.WriteLine("dropped client");
             }
         }
+
+        ~Client() { Dispose(); }
     }
 }
