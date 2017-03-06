@@ -12,28 +12,20 @@ namespace FFI_TESTS
         [TestMethod]
         public void smoke()
         {
-            IntPtr client = FFI.default_client();
-
-            FFI.drop_client(client);
-            MBool is_null = FFI.drop_client(client);
-
-            //Assert.IsTrue(is_null);
-            //Assert.AreEqual(client, IntPtr.Zero);
+            Client client = new Client();
         }
 
         [TestMethod]
         public void marshall_client_base()
         {
-            IntPtr client = FFI.default_client();
-            MClientBase cb = new MClientBase();
-
-            FFI.get_client_base(client, ref cb);
+            Client client = new Client();
+            Client.MClientBase cb = Client.getBase();
+            
             Assert.IsNotNull(cb.key);
             Assert.AreNotEqual(cb.key[0], 0);
-
-            FFI.drop_client(client);
         }
 
+        /*
         [TestMethod]
         public void marshall_chat_frame()
         {
@@ -70,5 +62,6 @@ namespace FFI_TESTS
             Assert.IsTrue((MBool)FFI.timer_tick(timer));
             FFI.drop_timer(timer);
         }
+        */
     }
 }
