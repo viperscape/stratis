@@ -40,15 +40,9 @@ namespace FFI_TESTS
             IntPtr client = FFI.default_client();
 
             // connect and login
-            {
-                MBool r = FFI.client_connect(client, "127.0.0.1:9996");
-                Assert.IsTrue(r);
-            }
+            Assert.IsTrue((MBool)FFI.client_connect(client, "127.0.0.1:9996"));
             FFI.client_register(client);
-            {
-                MBool r = FFI.client_login(client);
-                Assert.IsTrue(r);
-            }
+            Assert.IsTrue((MBool)FFI.client_login(client));
 
             //send something
             string text = "test";
@@ -65,6 +59,16 @@ namespace FFI_TESTS
             Assert.AreEqual(chat.get_msg(chat_len), text);
 
             FFI.drop_client(client);
+        }
+
+        [TestMethod]
+        public void timer_test()
+        {
+            IntPtr timer = FFI.new_timer(1);
+            System.Threading.Thread.Sleep(1000);
+
+            Assert.IsTrue((MBool)FFI.timer_tick(timer));
+            FFI.drop_timer(timer);
         }
     }
 }
