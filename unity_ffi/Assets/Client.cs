@@ -6,7 +6,7 @@ namespace Assets
 {
     class Client: IDisposable
     {
-        IntPtr client;
+        internal IntPtr client { get; private set; }
         bool disposed = false;
 
         [DllImport("stratis_ffi")]
@@ -28,6 +28,12 @@ namespace Assets
             return cb;
         }
 
+        public string getChat()
+        {
+            Chat.MChatFrame chat = new Chat.MChatFrame();
+            ushort len = Chat.get_client_chat(client, ref chat);
+            return chat.get_msg(len);
+        }
 
         [DllImport("stratis_ffi")]
         public static extern byte client_connect(IntPtr cptr, String s);
@@ -85,5 +91,10 @@ namespace Assets
         }
 
         ~Client() { Dispose(); }
+
+        public static implicit operator IntPtr(Client c)
+        {
+            return c.client;
+        }
     }
 }
