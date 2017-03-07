@@ -1,7 +1,7 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Runtime.InteropServices;
-using Assets;
+using Support;
 using System.Diagnostics;
 
 namespace FFI_TESTS

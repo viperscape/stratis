@@ -2,7 +2,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace Assets
+namespace Support
 {
     class Client: IDisposable
     {
