@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 namespace Support
@@ -25,9 +26,11 @@ namespace Support
                 ArraySubType = UnmanagedType.U1, SizeConst = FFI.MAX_TEXT_LEN)]
             public byte[] msg;
 
-            public string GetMsg(UInt16 len)
+            public KeyValuePair<byte[], string> GetMsg(UInt16 len)
             {
-                return System.Text.Encoding.UTF8.GetString(this.msg, 0, len);
+                return new KeyValuePair<byte[], string>
+                    (id, 
+                     System.Text.Encoding.UTF8.GetString(this.msg, 0, len));
             }
         }
     }

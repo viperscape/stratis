@@ -3,6 +3,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Runtime.InteropServices;
 using Support;
 using System.Diagnostics;
+using System.Collections.Generic;
 
 namespace FFI_TESTS
 {
@@ -13,7 +14,7 @@ namespace FFI_TESTS
         public void marshall_client_base()
         {
             Client client = new Client();
-            Client.MClientBase cb = client.getBase();
+            Client.MClientBase cb = client.GetBase();
             
             Assert.IsNotNull(cb.key);
             Assert.AreNotEqual(cb.key[0], 0);
@@ -36,9 +37,9 @@ namespace FFI_TESTS
 
             System.Threading.Thread.Sleep(100);
 
-            string text_r = client.getChat();
+            KeyValuePair<byte[], string> chat = client.GetChat();
 
-            Assert.AreEqual(text_s.Length, text_r.Length);
+            Assert.AreEqual(text_s.Length, chat.Value.Length);
         }
 
         [TestMethod]
@@ -47,7 +48,7 @@ namespace FFI_TESTS
             Timer timer = new Timer(1);
             System.Threading.Thread.Sleep(1000);
 
-            Assert.IsTrue(timer.tick());
+            Assert.IsTrue(timer.Tick());
         }
         
     }

@@ -1,5 +1,6 @@
 ﻿
 using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 namespace Support
@@ -28,11 +29,11 @@ namespace Support
             return cb;
         }
 
-        public Tuple<byte[],string> GetChat()
+        public KeyValuePair<byte[],string> GetChat()
         {
             Chat.MChatFrame chat = new Chat.MChatFrame();
             ushort len = Chat.get_client_chat(client, ref chat);
-            return new Tuple<byte[], string> (chat.id,chat.GetMsg(len));
+            return chat.GetMsg(len);
         }
 
         [DllImport("stratis_ffi")]
