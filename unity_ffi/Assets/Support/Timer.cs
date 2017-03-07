@@ -31,7 +31,7 @@ namespace Support
             timer = new_timer(t);
         }
 
-        public void restart () { timer_restart(timer); }
-        public MBool tick() { return timer_tick(timer); }
+        public void Restart () { timer_restart(timer); }
+        public MBool Tick() { return timer_tick(timer); }
     }
 }

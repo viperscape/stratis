@@ -25,7 +25,7 @@ namespace Support
                 ArraySubType = UnmanagedType.U1, SizeConst = FFI.MAX_TEXT_LEN)]
             public byte[] msg;
 
-            public string get_msg(UInt16 len)
+            public string GetMsg(UInt16 len)
             {
                 return System.Text.Encoding.UTF8.GetString(this.msg, 0, len);
             }

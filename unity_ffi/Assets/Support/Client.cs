@@ -20,7 +20,7 @@ namespace Support
         [DllImport("stratis_ffi")]
         static extern void get_client_base(IntPtr cptr, [In][Out] ref MClientBase cb);
 
-        public MClientBase getBase()
+        public MClientBase GetBase()
         {
             MClientBase cb = new MClientBase();
             get_client_base(client, ref cb);
@@ -28,11 +28,11 @@ namespace Support
             return cb;
         }
 
-        public string getChat()
+        public Tuple<byte[],string> GetChat()
         {
             Chat.MChatFrame chat = new Chat.MChatFrame();
             ushort len = Chat.get_client_chat(client, ref chat);
-            return chat.get_msg(len);
+            return new Tuple<byte[], string> (chat.id,chat.GetMsg(len));
         }
 
         [DllImport("stratis_ffi")]
