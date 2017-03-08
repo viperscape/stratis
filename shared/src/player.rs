@@ -56,7 +56,7 @@ impl Player {
         data[0] = opcode::PLAYER; //specify Player route in protocol
         data.extend_from_slice(bytes);
 
-        if let Some(uuid) = uuid {
+        if let Some(uuid) = uuid { //NOTE: server sends uuid to client
             data.extend_from_slice(uuid.as_bytes()); //refer to uuid
         }
         

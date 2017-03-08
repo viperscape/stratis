@@ -15,7 +15,7 @@ use std::thread;
 use std::sync::{Arc, Mutex};
 
 use player::Player;
-use chat::{read_text,write_text, text_as_bytes};
+use chat::{read_text,write_text};
 use opcode;
 
 pub const KEY_LEN: usize = 20;
@@ -162,11 +162,8 @@ impl Client {
     #[allow(unused_must_use)]
     pub fn nick (&mut self, nick: &str) {
         if let Some(ref mut s) = self.stream {
-            let (mut data, bytes) = text_as_bytes(nick);
-            data[0] = opcode::PLAYER;
-
-            s.write_all(&data);
-            s.write_all(bytes);
+            s.write_all(&Player::to_bytes(None,
+                                          &Player { nick: nick.to_owned() }));
         }
     }
 
