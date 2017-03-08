@@ -58,6 +58,7 @@
   <ItemGroup>
     <Compile Include="Assets\Support\Chat.cs" />
     <Compile Include="Assets\Support\Client.cs" />
+    <Compile Include="Assets\Support\Events.cs" />
     <Compile Include="Assets\Support\FFI.cs" />
     <Compile Include="Assets\Support\Timer.cs" />
     <Compile Include="UnitTest1.cs" />

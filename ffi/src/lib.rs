@@ -45,3 +45,4 @@ fn str_from_ptr<'a> (s: *const c_char) -> Result<&'a str,Utf8Error> {
 
 pub mod client;
 pub mod timer;
+pub mod events;

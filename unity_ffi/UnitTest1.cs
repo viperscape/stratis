@@ -50,6 +50,25 @@ namespace FFI_TESTS
 
             Assert.IsTrue(timer.Tick());
         }
-        
+
+        [TestMethod]
+        public void poll_event()
+        {
+            Client client = new Client();
+
+            // connect and login
+            Assert.IsTrue((MBool)Client.client_connect(client, "127.0.0.1:9996"));
+            Client.client_register(client);
+            Assert.IsTrue((MBool)Client.client_login(client));
+
+            //send something
+            string text_s = "test";
+            Chat.client_chat(client, text_s);
+            System.Threading.Thread.Sleep(100);
+
+            Events ev = new Events(client);
+            Assert.IsTrue(ev.has_event);
+            Assert.AreNotEqual(ev.ev[0], 0);
+        }
     }
 }
