@@ -175,8 +175,6 @@ pub extern fn get_players (cptr: *mut Arc<Mutex<Client>>,
 
     for (i,p) in client.cache.iter().enumerate() {
         let nick = p.1.nick.as_bytes();
-        
-        players[i].id = p.0.as_bytes().clone();
 
         for (k,c) in players[i].nick.iter_mut().enumerate() {
             *c = nick[k];
