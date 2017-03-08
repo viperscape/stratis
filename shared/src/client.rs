@@ -38,7 +38,7 @@ pub struct Client {
     pub ping_start: Instant,
     pub ping_delta: f32,
 
-    pub events: Option<(Sender<Event>,Receiver<Event>)>,
+    pub events: (Sender<Event>,Receiver<Event>),
 }
 
 impl Client {
@@ -52,7 +52,7 @@ impl Client {
                  ping_start: Instant::now(),
                  ping_delta: 0.0,
 
-                 events: Some(channel()),
+                 events: channel(),
         }
     }
     
@@ -210,10 +210,8 @@ impl Client {
                                     if let Ok(mut client) = client.lock() {
                                         client.msg.push((uuid,text));
                                         
-                                        if let Some(ref events) = client.events {
-                                            let _ = events.0.send(Event(opcode::CHAT,
-                                                                        uuid));
-                                        }
+                                        let _ = client.events.0.send(Event(opcode::CHAT,
+                                                                           uuid));
                                     }
                                 }
                             }
@@ -224,10 +222,8 @@ impl Client {
                             if let Ok(mut client) = client.lock() {
                                 client.cache.insert(uuid, player);
                                 
-                                if let Some(ref events) = client.events {
-                                    let _ = events.0.send(Event(opcode::PLAYER,
-                                                                uuid));
-                                }
+                                let _ = client.events.0.send(Event(opcode::PLAYER,
+                                                                   uuid));
                             }
                         }
                     },
