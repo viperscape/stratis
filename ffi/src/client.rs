@@ -1,9 +1,11 @@
 use std::mem::transmute;
 use std::sync::{Arc, Mutex};
+use std::slice;
 
 use shared::client::Client;
 
-use ::{MClientBase,MChatFrame,KEY_LEN,
+use ::{MClientBase,MChatFrame,MPlayer,
+       KEY_LEN,
        c_char,str_from_ptr};
 
 
@@ -151,4 +153,33 @@ pub extern fn get_client_ping (cptr: *mut Arc<Mutex<Client>>) -> f32 {
     let client = unsafe { & *cptr };
     let client = client.lock().unwrap();
     client.ping_delta
+}
+
+
+/// get player cache count, then supply sized array for get_players
+#[no_mangle]
+pub extern fn get_player_count (cptr: *mut Arc<Mutex<Client>>) -> u32 {
+    let client = unsafe { & *cptr };
+    let client = client.lock().unwrap();
+    client.cache.len() as u32
+}
+#[no_mangle]
+pub extern fn get_players (cptr: *mut Arc<Mutex<Client>>,
+                           players: *mut MPlayer,
+                           len: u32) {
+    let client = unsafe { & *cptr };
+    let client = client.lock().unwrap();
+    let mut players = unsafe {
+        slice::from_raw_parts_mut(players, len as usize)
+    };
+
+    for (i,p) in client.cache.iter().enumerate() {
+        let nick = p.1.nick.as_bytes();
+        
+        players[i].id = p.0.as_bytes().clone();
+
+        for (k,c) in players[i].nick.iter_mut().enumerate() {
+            *c = nick[k];
+        }
+    }
 }

@@ -25,6 +25,7 @@ pub struct MChatFrame {
 
 #[repr(C)]
 pub struct MPlayer {
+    id: [u8;ID_LEN],
     nick: [u8;MAX_NICK_LEN],
 }
 
