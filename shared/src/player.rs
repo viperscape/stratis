@@ -5,6 +5,9 @@ use std::io::prelude::*;
 
 use chat::{read_text,text_as_bytes};
 use self::uuid::Uuid;
+use opcode;
+
+pub const MAX_NICK_LEN: usize = 30;
 
 
 #[derive(Debug,Clone)]
@@ -23,7 +26,10 @@ impl Player {
     #[allow(dead_code)]
     pub fn from_stream<S:Read> (mut s: &mut S, get_uuid: bool) -> (Option<Uuid>, Option<Player>) {
         if let Some(text) = read_text(s) {
-            let p = Some(Player { nick: text.trim().to_owned() });
+            let mut nick = text.trim().to_owned();
+            nick.truncate(MAX_NICK_LEN);
+            
+            let p = Some(Player { nick: nick });
             let i;
             if !get_uuid { i = None }
             else {
@@ -47,7 +53,7 @@ impl Player {
     pub fn to_bytes (uuid: Option<&Uuid>, player: &Player) -> Vec<u8> {
         let (mut data, bytes) = text_as_bytes(&player.nick);
         
-        data[0] = 3; //specify Player route in protocol
+        data[0] = opcode::PLAYER; //specify Player route in protocol
         data.extend_from_slice(bytes);
 
         if let Some(uuid) = uuid {

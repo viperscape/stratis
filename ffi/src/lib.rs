@@ -8,6 +8,7 @@ use std::str::Utf8Error;
 
 use shared::client::{KEY_LEN,ID_LEN};
 use shared::chat::MAX_TEXT_LEN;
+use shared::player::MAX_NICK_LEN;
 
 /// managed for c-interop
 #[repr(C)]
@@ -22,6 +23,10 @@ pub struct MChatFrame {
     msg: [u8;MAX_TEXT_LEN],
 }
 
+#[repr(C)]
+pub struct MPlayer {
+    nick: [u8;MAX_NICK_LEN],
+}
 
 // TODO: verify lifetime is actually valid here, conv to String instead?
 fn str_from_ptr<'a> (s: *const c_char) -> Result<&'a str,Utf8Error> {
