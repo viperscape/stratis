@@ -13,10 +13,12 @@ use std::collections::HashMap;
 
 use std::thread;
 use std::sync::{Arc, Mutex};
+use std::sync::mpsc::{channel,Receiver,Sender};
 
 use player::Player;
 use chat::{read_text,write_text};
 use opcode;
+use events::Event;
 
 pub const KEY_LEN: usize = 20;
 pub const ID_LEN: usize = 16;
@@ -35,6 +37,8 @@ pub struct Client {
     pub msg: Vec<(Uuid,String)>, //cached messages of inbound chat
     pub ping_start: Instant,
     pub ping_delta: f32,
+
+    pub events: Option<(Sender<Event>,Receiver<Event>)>,
 }
 
 impl Client {
@@ -47,6 +51,8 @@ impl Client {
                  msg: vec!(),
                  ping_start: Instant::now(),
                  ping_delta: 0.0,
+
+                 events: Some(channel()),
         }
     }
     
@@ -203,6 +209,11 @@ impl Client {
                                 if let Ok(uuid) = Uuid::from_bytes(&id) {
                                     if let Ok(mut client) = client.lock() {
                                         client.msg.push((uuid,text));
+                                        
+                                        if let Some(ref events) = client.events {
+                                            let _ = events.0.send(Event(opcode::CHAT,
+                                                                        uuid));
+                                        }
                                     }
                                 }
                             }
@@ -212,6 +223,11 @@ impl Client {
                         if let (Some(uuid),Some(player)) = Player::from_stream(&mut s, true) {
                             if let Ok(mut client) = client.lock() {
                                 client.cache.insert(uuid, player);
+                                
+                                if let Some(ref events) = client.events {
+                                    let _ = events.0.send(Event(opcode::PLAYER,
+                                                                uuid));
+                                }
                             }
                         }
                     },
