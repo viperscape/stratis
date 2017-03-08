@@ -38,13 +38,15 @@ pub struct Client {
     pub ping_start: Instant,
     pub ping_delta: f32,
 
-    pub events: (Sender<Event>,Receiver<Event>),
+    pub events: Sender<Event>,
 }
 
 impl Client {
     #[allow(dead_code)]
-    pub fn new (key: [u8;KEY_LEN], uuid: Uuid) -> Client {
-        Client { base: ClientBase { key:From::from(&key[..]),
+    pub fn new (key: [u8;KEY_LEN], uuid: Uuid) -> (Client, Receiver<Event>) {
+        let (tx,rx) = channel();
+        
+        (Client { base: ClientBase { key:From::from(&key[..]),
                                     id:uuid, },
                  stream: None,
                  cache: HashMap::new(),
@@ -52,12 +54,13 @@ impl Client {
                  ping_start: Instant::now(),
                  ping_delta: 0.0,
 
-                 events: channel(),
-        }
+                 events: tx,
+        },
+         rx)
     }
     
     #[allow(unused_must_use)]
-    pub fn default () -> Client {        
+    pub fn default () -> (Client, Receiver<Event>) {        
         let id = uuid::Uuid::new_v4();
         let m = hmacsha1::hmac_sha1(uuid::Uuid::new_v4().as_bytes(),
                                     id.as_bytes());
@@ -88,7 +91,7 @@ impl Client {
         &self.base.key
     }
 
-    pub fn load_file (path: &str) -> Option<Client> {
+    pub fn load_file (path: &str) -> Option<(Client, Receiver<Event>)> {
         let f = File::open(path);
         if let Ok(mut f) = f {
             return Client::load(&mut f)
@@ -97,7 +100,7 @@ impl Client {
         None
     }
 
-    pub fn load<S:Read> (s: &mut S) -> Option<Client> {
+    pub fn load<S:Read> (s: &mut S) -> Option<(Client, Receiver<Event>)> {
         let mut key = [0u8;KEY_LEN];
         let mut id = [0u8;ID_LEN];
         if let Ok(_) = s.read_exact(&mut key) {
@@ -210,7 +213,7 @@ impl Client {
                                     if let Ok(mut client) = client.lock() {
                                         client.msg.push((uuid,text));
                                         
-                                        let _ = client.events.0.send(Event(opcode::CHAT,
+                                        let _ = client.events.send(Event(opcode::CHAT,
                                                                            uuid));
                                     }
                                 }
@@ -222,7 +225,7 @@ impl Client {
                             if let Ok(mut client) = client.lock() {
                                 client.cache.insert(uuid, player);
                                 
-                                let _ = client.events.0.send(Event(opcode::PLAYER,
+                                let _ = client.events.send(Event(opcode::PLAYER,
                                                                    uuid));
                             }
                         }

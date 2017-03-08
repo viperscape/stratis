@@ -140,7 +140,7 @@ impl Server {
 
     fn register (server: &mut Server,
                  mut s: &mut TcpStream,) {
-        if let Some(c) = Client::load(&mut s) {
+        if let Some((c,_)) = Client::load(&mut s) {
 
             if let Ok(clients) = server.clients.lock() {
                 for n in clients.iter() {
@@ -192,7 +192,7 @@ impl Server {
         let mut client_id = None;
         let mut player = None;
         
-        if let Some(c) = Client::load(&mut s) {
+        if let Some((c,_)) = Client::load(&mut s) {
             let mut reg_key = None;
             
             if let Ok(clients) = server.clients.lock() {

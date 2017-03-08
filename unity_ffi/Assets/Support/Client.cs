@@ -8,13 +8,15 @@ namespace Support
     class Client: IDisposable
     {
         internal IntPtr client { get; private set; }
+        internal IntPtr rx { get; private set; }
+
         bool disposed = false;
 
         [DllImport("stratis_ffi")]
-        static extern IntPtr default_client();
+        static extern MClient default_client();
 
         [DllImport("stratis_ffi")]
-        static extern byte drop_client(IntPtr cptr);
+        static extern void drop_mclient(MClient mclient);
 
         // -- //
 
@@ -75,11 +77,21 @@ namespace Support
             public byte[] key;
         }
 
+        [StructLayout(LayoutKind.Sequential)]
+        public struct MClient
+        { 
+            internal IntPtr client;
+            internal IntPtr rx; // receiving channel
+        }
+
 
 
         public Client ()
         {
-            client = default_client();
+            MClient mc = new MClient();
+            mc = default_client();
+            client = mc.client;
+            rx = mc.rx;
         }
 
         public void Dispose()
@@ -87,7 +99,11 @@ namespace Support
             if (!disposed)
             {
                 disposed = true;
-                drop_client(client);
+
+                MClient mc = new MClient();
+                mc.rx = rx;
+                mc.client = client;
+                drop_mclient(mc);
             }
         }
 

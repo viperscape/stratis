@@ -3,7 +3,6 @@ extern crate stratis;
 use stratis::{Client};
 
 use std::io;
-use std::thread;
 use std::sync::{Arc, Mutex};
 
 
@@ -14,13 +13,13 @@ fn main() {
     let ip_addr = "127.0.0.1:9996";
     
     let client;
-    if let Some(mut c) = Client::load_file("game/client.key") {
+    if let Some((mut c, _rx)) = Client::load_file("game/client.key") {
         c.connect(ip_addr);
         client = Arc::new(Mutex::new(c));
         Client::login(&client);
     }
     else {
-        let mut c = Client::default();
+        let (mut c, _rx) = Client::default();
         Client::save(&c,"game/client.key");
         c.connect(ip_addr);
         c.register();

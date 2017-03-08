@@ -1,27 +1,28 @@
-use std::mem::transmute;
 use std::sync::{Arc, Mutex};
 use std::slice;
 
 use shared::client::Client;
 
-use ::{MClientBase,MChatFrame,MPlayer,
+use ::{MClientBase,MChatFrame,MPlayer,MClient,
        KEY_LEN,
        c_char,str_from_ptr};
 
 
 #[no_mangle]
-pub extern fn default_client() -> *mut Arc<Mutex<Client>> {
-    unsafe { transmute(Box::new(Arc::new(Mutex::new(Client::default())))) }
+pub extern fn default_client(mc: &mut MClient) {
+    let (client, rx) = Client::default();
+    let client = Box::new(Arc::new(Mutex::new(client)));
+    let rx = Box::new(rx);
+
+    mc.client = Box::into_raw(client);
+    mc.rx = Box::into_raw(rx);
 }
 
 
 #[no_mangle]
-pub extern fn drop_client(cptr: *mut Arc<Mutex<Client>>) -> u8 {
-    if cptr.is_null() { return true as u8 }
-    
-    unsafe { Box::from_raw(cptr); }
-
-    cptr.is_null() as u8
+pub extern fn drop_mclient(mc: &mut MClient) {
+    if !mc.client.is_null() { unsafe { Box::from_raw(mc.client); } }
+    if !mc.rx.is_null() { unsafe { Box::from_raw(mc.rx); } }
 }
 
 
@@ -88,7 +89,7 @@ pub extern fn client_load(cptr: *mut Arc<Mutex<Client>>) -> bool {
     let client = unsafe { &mut *cptr };
     let mut client = client.lock().unwrap();
     
-    if let Some(c) = Client::load_file("client.key") {
+    if let Some((c,_)) = Client::load_file("client.key") {
         client.base = c.base.clone();
         true
     }

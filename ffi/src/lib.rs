@@ -5,12 +5,21 @@ use std::os::raw::c_char;
 use std::ffi::{CStr};
 use std::str;
 use std::str::Utf8Error;
+use std::sync::{Arc, Mutex};
+use std::sync::mpsc::Receiver;
 
-use shared::client::{KEY_LEN,ID_LEN};
+use shared::client::{KEY_LEN,ID_LEN, Client};
 use shared::chat::MAX_TEXT_LEN;
 use shared::player::MAX_NICK_LEN;
+use shared::events::Event;
 
 /// managed for c-interop
+#[repr(C)]
+pub struct MClient { // we're coupling the channel rx and the client here
+    client: *mut Arc<Mutex<Client>>,
+    rx: *mut Receiver<Event>
+}
+
 #[repr(C)]
 pub struct MClientBase {
     id: [u8;ID_LEN],
