@@ -7,3 +7,4 @@ unity_ffi/.vs/
 *.dll
 unity_ffi/obj/
 unity_ffi/TestResults/
+unity_ffi/UpgradeLog*

@@ -2,7 +2,7 @@ use opcode::Opcode;
 use uuid::Uuid;
 use client::ID_LEN;
 
-const BYTE_LEN: usize = ID_LEN + 1;
+pub const BYTE_LEN: usize = ID_LEN + 1;
 
 pub struct Event (pub Opcode,
                   pub Uuid);
