@@ -69,6 +69,11 @@ namespace FFI_TESTS
             Events ev = new Events(client);
             Assert.IsTrue(ev.has_event);
             Assert.AreNotEqual(ev.ev[0], 0);
+
+            Assert.AreEqual(ev.GetEvent(),Events.Event.Player);
+            Assert.AreNotEqual(ev.GetId()[0], 0);
+
+            //FIXME: subsequent requests are still of PLAYER events
         }
     }
 }

@@ -9,7 +9,8 @@ namespace Support
 {
     class Events
     {
-        public byte[] ev = new byte[FFI.ID_LEN + 1]; // we're expecting an opcode and an id
+        internal const byte BYTE_LEN = FFI.ID_LEN + 1;
+        public byte[] ev = new byte[BYTE_LEN]; // we're expecting an opcode and an id
 
         public bool has_event = false;
 
@@ -20,5 +21,23 @@ namespace Support
         {
             has_event = (MBool)poll_event(client.rx, ev);
         }
+
+        public Event GetEvent ()
+        {
+            return (Event)ev[0];
+        }
+
+        public byte[] GetId ()
+        {
+            byte[] r = new byte[BYTE_LEN];
+            Buffer.BlockCopy(ev, 1, r, 0, FFI.ID_LEN);
+            return r;
+        }
+
+        public enum Event : byte {
+            Chat = 2,
+            Player = 3,
+            PlayerDrop = 4
+        };
     }
 }
