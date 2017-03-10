@@ -32,7 +32,8 @@ fn main() {
         rx = rx_;
         Client::login(&client);
     }
-    
+
+    Client::handler(client.clone());
     
     let mut chat = true;
     loop {

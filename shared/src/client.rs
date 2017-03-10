@@ -191,7 +191,7 @@ impl Client {
     }
 
     
-    fn handler (client: Arc<Mutex<Client>>) {
+    pub fn handler (client: Arc<Mutex<Client>>) {
         let mut cmd = [0u8;1];
         let mut s; // NOTE: this should be read from only!
 
@@ -199,13 +199,16 @@ impl Client {
             client.ping();
             
             if let Some(ref s_) = client.stream {
-                s = s_.try_clone().unwrap();
+                if let Ok(s_) = s_.try_clone() {
+                    s = s_;
+                }
+                else { return }
             }
             else { return }
         }
         else { return }
         
-        'handler: loop {
+        'handler: loop {println!("WW");
             if let Ok(_) = s.read_exact(&mut cmd) {
                 match cmd[0] {
                     opcode::CHAT => {
@@ -268,7 +271,7 @@ impl Client {
                 }
             }
         }
-
+        
         if let Ok(mut client) = client.lock() {
             client.shutdown();
         }

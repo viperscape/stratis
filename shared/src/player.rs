@@ -33,7 +33,7 @@ impl Player {
             let i;
             if !get_uuid { i = None }
             else {
-                let mut id = [0u8;16];
+                let mut id = [0u8;::client::ID_LEN];
                 if let Ok(_) = s.read_exact(&mut id) {
                     if let Ok(uuid) = Uuid::from_bytes(&id) {
                         i = Some(uuid);

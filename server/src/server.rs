@@ -104,7 +104,7 @@ impl Server {
                                     }
                                 },
                                 opcode::PING => {
-                                    s.write_all(&[opcode::PONG]);
+                                    server.dist.send(DistKind::Select(uuid,vec![opcode::PING]));
                                     println!("ping");
                                 },
                                 opcode::PONG => {
