@@ -11,27 +11,13 @@ namespace Support
 
         [DllImport("stratis_ffi")]
         [return: MarshalAs(UnmanagedType.U2)]
-        public static extern UInt16 get_client_chat(IntPtr cptr, [In][Out] ref MChatFrame chat);
+        static extern UInt16 get_client_chat(IntPtr cptr, byte[] id, byte[] msg);
 
-
-
-        [StructLayout(LayoutKind.Sequential)]
-        public struct MChatFrame
+        public static string GetMsg(Client client, byte[] id)
         {
-            [MarshalAs(UnmanagedType.ByValArray,
-                ArraySubType = UnmanagedType.U1, SizeConst = FFI.ID_LEN)]
-            public byte[] id;
-
-            [MarshalAs(UnmanagedType.ByValArray,
-                ArraySubType = UnmanagedType.U1, SizeConst = FFI.MAX_TEXT_LEN)]
-            public byte[] msg;
-
-            public KeyValuePair<byte[], string> GetMsg(UInt16 len)
-            {
-                return new KeyValuePair<byte[], string>
-                    (id, 
-                     System.Text.Encoding.UTF8.GetString(this.msg, 0, len));
-            }
+            byte[] msg = new byte[FFI.MAX_TEXT_LEN];
+            ushort len = get_client_chat(client.client, id, msg);
+            return System.Text.Encoding.UTF8.GetString(msg, 0, len);
         }
     }
 }

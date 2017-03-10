@@ -33,8 +33,10 @@ pub struct ClientBase {
 pub struct Client {
     pub base: ClientBase,
     pub stream: Option<TcpStream>,
-    pub cache: HashMap<Uuid,Player>,
-    pub msg: Vec<(Uuid,String)>, //cached messages of inbound chat
+    
+    pub player_cache: HashMap<Uuid,Player>,
+    pub msg_cache: HashMap<Uuid,Vec<String>>, //NOTE: 'events' orders of these messages
+    
     pub ping_start: Instant,
     pub ping_delta: f32,
 
@@ -47,14 +49,15 @@ impl Client {
         let (tx,rx) = channel();
         
         (Client { base: ClientBase { key:From::from(&key[..]),
-                                    id:uuid, },
-                 stream: None,
-                 cache: HashMap::new(),
-                 msg: vec!(),
-                 ping_start: Instant::now(),
-                 ping_delta: 0.0,
+                                     id:uuid, },
+                  stream: None,
+                  player_cache: HashMap::new(),
+                  msg_cache: HashMap::new(),
+                  
+                  ping_start: Instant::now(),
+                  ping_delta: 0.0,
 
-                 events: tx,
+                  events: tx,
         },
          rx)
     }
@@ -211,7 +214,15 @@ impl Client {
                             if let Ok(_) = s.read_exact(&mut id) {
                                 if let Ok(uuid) = Uuid::from_bytes(&id) {
                                     if let Ok(mut client) = client.lock() {
-                                        client.msg.push((uuid,text));
+
+                                        // this lil dance makes BC happy
+                                        let mut has_uuid = false;
+                                        if let Some(msg) = client.msg_cache.get_mut(&uuid) {
+                                            msg.push(text.clone());
+                                            has_uuid = true;
+                                        }
+                                        
+                                        if !has_uuid { client.msg_cache.insert(uuid,vec![text]); }
                                         
                                         let _ = client.events.send(Event(opcode::CHAT,
                                                                            uuid));
@@ -223,7 +234,7 @@ impl Client {
                     opcode::PLAYER => {
                         if let (Some(uuid),Some(player)) = Player::from_stream(&mut s, true) {
                             if let Ok(mut client) = client.lock() {
-                                client.cache.insert(uuid, player);
+                                client.player_cache.insert(uuid, player);
                                 
                                 let _ = client.events.send(Event(opcode::PLAYER,
                                                                    uuid));

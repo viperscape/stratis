@@ -1,6 +1,5 @@
 extern crate stratis_shared as shared;
 
-
 use std::os::raw::c_char;
 use std::ffi::{CStr};
 use std::str;
@@ -9,7 +8,6 @@ use std::sync::{Arc, Mutex};
 use std::sync::mpsc::Receiver;
 
 use shared::client::{KEY_LEN,ID_LEN, Client};
-use shared::chat::MAX_TEXT_LEN;
 use shared::player::MAX_NICK_LEN;
 use shared::events::Event;
 
@@ -24,12 +22,6 @@ pub struct MClient { // we're coupling the channel rx and the client here
 pub struct MClientBase {
     id: [u8;ID_LEN],
     key: [u8;KEY_LEN],
-}
-
-#[repr(C)]
-pub struct MChatFrame {
-    id: [u8;ID_LEN],
-    msg: [u8;MAX_TEXT_LEN],
 }
 
 #[repr(C)]

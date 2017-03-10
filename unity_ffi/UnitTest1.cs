@@ -36,10 +36,10 @@ namespace FFI_TESTS
             Chat.client_chat(client, text_s);
 
             System.Threading.Thread.Sleep(100);
+            
+            string msg = Chat.GetMsg(client, client.GetBase().id); //get our own msg
 
-            KeyValuePair<byte[], string> chat = client.GetChat();
-
-            Assert.AreEqual(text_s.Length, chat.Value.Length);
+            Assert.AreEqual(text_s.Length, msg.Length);
         }
 
         [TestMethod]

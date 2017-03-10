@@ -1,10 +1,13 @@
+extern crate uuid;
+
 use std::sync::{Arc, Mutex};
 use std::slice;
 
 use shared::client::Client;
+use self::uuid::Uuid;
 
-use ::{MClientBase,MChatFrame,MPlayer,MClient,
-       KEY_LEN,
+use ::{MClientBase,MPlayer,MClient,
+       KEY_LEN,ID_LEN,
        c_char,str_from_ptr};
 
 
@@ -119,26 +122,28 @@ pub extern fn client_nick(cptr: *mut Arc<Mutex<Client>>, s: *const c_char) {
 
 
 
-//NOTE: this is meant to be polled on frame-tick
 #[no_mangle]
-pub extern fn get_client_chat(cptr: *mut Arc<Mutex<Client>>, chat: &mut MChatFrame) -> u16 {
+pub extern fn get_client_chat(cptr: *mut Arc<Mutex<Client>>,
+                              id: *const u8,
+                              msg: *mut u8) -> u16 {
     let client = unsafe { &mut *cptr };
     let mut client = client.lock().unwrap();
 
-    if client.msg.len() > 0 {
-        let (uuid, msg) = client.msg.remove(0);
-        
-        chat.id = uuid.as_bytes().clone();
+    let id = unsafe { slice::from_raw_parts(id,ID_LEN) };
+    
+    //NOTE: assuming msg exists!
+    let mut cache = client.msg_cache.get_mut(&Uuid::from_bytes(id).unwrap()).unwrap();
 
-        let bytes = msg.as_bytes();
-        for (i,b) in bytes.iter().enumerate() {
-            chat.msg[i] = *b;
-        }
-
-        return bytes.len() as u16
+    let text = cache.remove(0);
+    let bytes = text.as_bytes();
+    let len = bytes.len();
+    
+    let mut msg = unsafe { slice::from_raw_parts_mut(msg,len) };
+    for (i,b) in bytes.iter().enumerate() {
+        msg[i] = *b;
     }
 
-    0
+    return len as u16
 }
 
 
@@ -162,7 +167,7 @@ pub extern fn get_client_ping (cptr: *mut Arc<Mutex<Client>>) -> f32 {
 pub extern fn get_player_count (cptr: *mut Arc<Mutex<Client>>) -> u32 {
     let client = unsafe { & *cptr };
     let client = client.lock().unwrap();
-    client.cache.len() as u32
+    client.player_cache.len() as u32
 }
 #[no_mangle]
 pub extern fn get_players (cptr: *mut Arc<Mutex<Client>>,
@@ -174,7 +179,7 @@ pub extern fn get_players (cptr: *mut Arc<Mutex<Client>>,
         slice::from_raw_parts_mut(players, len as usize)
     };
 
-    for (i,p) in client.cache.iter().enumerate() {
+    for (i,p) in client.player_cache.iter().enumerate() {
         let nick = p.1.nick.as_bytes();
 
         for (k,c) in players[i].nick.iter_mut().enumerate() {

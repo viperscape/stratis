@@ -31,12 +31,6 @@ namespace Support
             return cb;
         }
 
-        public KeyValuePair<byte[],string> GetChat()
-        {
-            Chat.MChatFrame chat = new Chat.MChatFrame();
-            ushort len = Chat.get_client_chat(client, ref chat);
-            return chat.GetMsg(len);
-        }
 
         [DllImport("stratis_ffi")]
         public static extern byte client_connect(IntPtr cptr, String s);

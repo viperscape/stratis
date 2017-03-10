@@ -10,3 +10,4 @@ crate-type = ["dylib"]
 
 [dependencies]
 stratis-shared = { path = "../shared" }
+uuid = { version = "^0.3", features = ["v4"]}
