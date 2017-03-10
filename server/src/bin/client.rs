@@ -1,9 +1,12 @@
 extern crate stratis;
+extern crate stratis_shared as shared;
 
 use stratis::{Client};
+use shared::events::Event;
 
 use std::io;
 use std::sync::{Arc, Mutex};
+use std::sync::mpsc::Receiver;
 
 
 #[allow(unused_must_use)]
@@ -13,17 +16,20 @@ fn main() {
     let ip_addr = "127.0.0.1:9996";
     
     let client;
-    if let Some((mut c, _rx)) = Client::load_file("game/client.key") {
+    let rx: Receiver<Event>;
+    if let Some((mut c, rx_)) = Client::load_file("client.key") {
         c.connect(ip_addr);
         client = Arc::new(Mutex::new(c));
+        rx = rx_;
         Client::login(&client);
     }
     else {
-        let (mut c, _rx) = Client::default();
-        Client::save(&c,"game/client.key");
+        let (mut c, rx_) = Client::default();
+        Client::save(&c,"client.key");
         c.connect(ip_addr);
         c.register();
         client = Arc::new(Mutex::new(c));
+        rx = rx_;
         Client::login(&client);
     }
     
@@ -42,6 +48,11 @@ fn main() {
                     else {
                         match cmd {
                             "exit" => { break },
+                            "ev" => {
+                                if let Ok(e) = rx.try_recv() {
+                                    println!("event:{:?}",e);
+                                }
+                            },
                             _ => {
                                 let cmds: Vec<&str> = cmd.split(' ').collect();
                                 if cmds[0] == "nick" {
