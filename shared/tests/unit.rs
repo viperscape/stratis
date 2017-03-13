@@ -11,6 +11,18 @@ use shared::opcode;
 
 use shared::chat;
 
+/// recreate to appease type checker
+fn cursor_transform (s: &mut Cursor<Vec<u8>>) -> Cursor<&mut [u8]> {
+ Cursor::new(&mut s.get_mut()[..])
+}
+
+fn assert_opcode(s: &mut Cursor<&mut [u8]>, op: u8) {
+    s.set_position(0);
+    let mut b = [0u8];
+    let r = s.read_exact(&mut b);
+    assert!(r.is_ok());
+    assert_eq!(b[0], op);
+}
 
 #[test]
 fn player_uuid () {
@@ -22,10 +34,7 @@ fn player_uuid () {
 
     assert!(s.get_ref().len() > 0);
 
-    let mut b = [0u8];
-    let r = s.read_exact(&mut b);
-    assert!(r.is_ok());
-    assert_eq!(b[0], opcode::PLAYER);
+    assert_opcode(&mut s,opcode::PLAYER);
     
     let r = Player::from_stream(&mut s, true);
     assert!(r.0.is_some());
@@ -44,10 +53,7 @@ fn player () {
 
     assert!(s.get_ref().len() > 0);
 
-    let mut b = [0u8];
-    let r = s.read_exact(&mut b);
-    assert!(r.is_ok());
-    assert_eq!(b[0], opcode::PLAYER);
+    assert_opcode(&mut s,opcode::PLAYER);
     
     let r = Player::from_stream(&mut s, false);
     assert!(r.0.is_none());
@@ -62,15 +68,10 @@ fn chat() {
     let text = "test";
     let mut s = Cursor::new(vec![]);
     chat::write_text(&mut s, text);
-
-    assert!(s.get_ref().len() > 0);
     
-    s.set_position(0);
-    let mut b = [0u8];
-    let r = s.read_exact(&mut b);
-    assert!(r.is_ok());
-    assert_eq!(b[0], opcode::CHAT);
-
+    let mut s = cursor_transform(&mut s);
+    assert!(s.get_ref().len() > 0);
+    assert_opcode(&mut s,opcode::CHAT);
     
     let r = chat::read_text(&mut s);
     assert!(r.is_some());
