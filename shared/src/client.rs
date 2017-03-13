@@ -208,7 +208,7 @@ impl Client {
         }
         else { return }
         
-        'handler: loop {println!("WW");
+        'handler: loop {
             if let Ok(_) = s.read_exact(&mut cmd) {
                 match cmd[0] {
                     opcode::CHAT => {
