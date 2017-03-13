@@ -1,9 +1,6 @@
-use std::net::{TcpStream};
-
 use std::io::prelude::*;
 
 extern crate byteorder;
-
 use self::byteorder::{BigEndian,ByteOrder};
 
 pub const MAX_TEXT_LEN: usize = 2048;
@@ -31,7 +28,7 @@ pub fn read_text<S:Read> (mut s: &mut S) -> Option<String> {
 
 #[allow(unused_must_use)]
 /// defaults to CHAT opcode
-pub fn write_text (mut s: &mut TcpStream, text: &str) {
+pub fn write_text<S:Write> (mut s: &mut S, text: &str) {
     let (data, bytes) = text_as_bytes(text);
     s.write_all(&data);
     s.write_all(&bytes);
