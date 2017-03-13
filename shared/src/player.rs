@@ -10,7 +10,7 @@ use opcode;
 pub const MAX_NICK_LEN: usize = 30;
 
 
-#[derive(Debug,Clone)]
+#[derive(Debug,Clone,PartialEq)]
 pub struct Player {
     pub nick: String,
 }
