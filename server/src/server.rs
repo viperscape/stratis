@@ -135,6 +135,7 @@ impl Server {
 
         if let Some(uuid) = client_id {
             server.dist.send(DistKind::Remove(uuid));
+            server.players.lock().unwrap().remove(&uuid); //ok to panic here
         }
     }
 
