@@ -27,15 +27,14 @@ fn assert_opcode (rx: &Receiver<Event>, op: u8) -> Event {
 fn assert_client () -> (Arc<Mutex<Client>>,Receiver<Event>) {
     let btw = Range::new(25000,64000);
     let mut rng = rand::thread_rng();
-
-    let v = btw.ind_sample(&mut rng);
-    println!("{:?}",v);
+    let port = btw.ind_sample(&mut rng).to_string();
     
-    let host = "127.0.0.1:".to_owned() + stringify!(btw.ind_sample(&mut rng));
+    let host = "127.0.0.1:".to_owned() + &port;
     let host_ = host.clone();
     let _handle = thread::spawn(move || {
         let mut _server = Server::new(&host_);
     });
+    
     let (mut client, rx) = Client::default();
     client.connect(&host);
     client.register();
@@ -71,6 +70,8 @@ fn client_chat () {
     
     assert_opcode(&rx,opcode::PLAYER);
     assert_opcode(&rx,opcode::PLAYER);
+
+    thread::sleep(Duration::from_millis(10));
     let id = assert_opcode(&rx,opcode::CHAT).1;
     let text_ = client.lock().unwrap()
         .msg_cache.get_mut(&id).unwrap()
