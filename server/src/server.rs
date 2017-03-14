@@ -98,14 +98,14 @@ impl Server {
                                                 let data = Player::to_bytes(Some(&uuid),&player);
                                                 server.dist.send(DistKind::Broadcast(data));
                                                 
-                                                println!("nick_change:{:?}  {:?}",uuid,player);
+                                                //println!("nick_change:{:?}  {:?}",uuid,player);
                                             }
                                         }
                                     }
                                 },
                                 opcode::PING => {
                                     server.dist.send(DistKind::Select(uuid,vec![opcode::PING]));
-                                    println!("ping");
+                                    //println!("ping");
                                 },
                                 opcode::PONG => {
                                     if time.elapsed() > Duration::new(5, 0) {
@@ -129,7 +129,7 @@ impl Server {
             }
         }
 
-        println!("client dropped");
+        //println!("client dropped");
         let _ = s.flush();
         let _ = s.shutdown(Shutdown::Both);
 
@@ -156,8 +156,8 @@ impl Server {
                 }
 
                 if r {
-                    let r = store.client_put(&c.base);
-                    println!("registered ({:?}):{:?}",r, c.id());
+                    let _r = store.client_put(&c.base);
+                    //println!("registered ({:?}):{:?}",r, c.id());
 
                     if let Ok(mut clients) = server.clients.lock() {
                         clients.push(c.base.clone());
@@ -174,7 +174,7 @@ impl Server {
              uuid: Uuid) {
         
         if let Some(text) = read_text(s) {
-            println!("chat-client:{:?}",text.trim());
+            //println!("chat-client:{:?}",text.trim());
             
             //broadcast
             let (mut data, bytes) = text_as_bytes(&text);
@@ -221,11 +221,11 @@ impl Server {
 
                                 if let Ok(mut players) = server.players.lock() {
                                     players.insert(*c.id(),player.clone());
-                                    println!("total players:{:?}",players.len()); //NOTE: this should print on debug only
+                                    //println!("total players:{:?}",players.len()); //NOTE: this should print on debug only
                                 }
                             }
 
-                            println!("login:{:?}",c.id());
+                            //println!("login:{:?}",c.id());
                             let data = Player::to_bytes(Some(c.id()),&player);
                             server.dist.send(DistKind::Broadcast(data));
                         }

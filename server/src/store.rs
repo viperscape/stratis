@@ -73,14 +73,14 @@ impl DataStore for Store {
     fn player_put (&self, uuid: &Uuid, player: &Player) -> bool {
         let r = self.conn.execute("INSERT INTO players (uuid, nick) VALUES ($1, $2)",
                                   &[uuid, &player.nick]);
-        println!("{:?}",r);
+        //println!("{:?}",r);
 
         r.is_ok()
     }
     fn player_update (&self, uuid: &Uuid, player: &Player) -> bool {
         let r = self.conn.execute("UPDATE players SET nick = $2 where uuid = $1",
                                   &[uuid, &player.nick]);
-        println!("{:?}",r);
+        //println!("{:?}",r);
 
         r.is_ok()
     }

@@ -111,7 +111,7 @@ impl Client {
                 if let Ok(id) = Uuid::from_bytes(&id) {
                     return Some(Client::new(key, id))
                 }
-                else { println!("cannot uuid file") }
+                //else { println!("cannot uuid file") }
             }
         }
 
