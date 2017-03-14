@@ -20,28 +20,6 @@ namespace FFI_TESTS
             Assert.AreNotEqual(cb.key[0], 0);
         }
 
-        
-        [TestMethod]
-        public void marshall_chat_frame()
-        {
-            Client client = new Client();
-
-            // connect and login
-            Assert.IsTrue((MBool)Client.client_connect(client, "127.0.0.1:9996"));
-            Client.client_register(client);
-            Assert.IsTrue((MBool)Client.client_login(client));
-
-            //send something
-            string text_s = "test";
-            Chat.client_chat(client, text_s);
-
-            System.Threading.Thread.Sleep(100);
-            
-            string msg = Chat.GetMsg(client, client.GetBase().id); //get our own msg
-
-            Assert.AreEqual(text_s.Length, msg.Length);
-        }
-
         [TestMethod]
         public void timer_test()
         {
@@ -52,7 +30,7 @@ namespace FFI_TESTS
         }
 
         [TestMethod]
-        public void poll_event()
+        public void client_suite ()
         {
             Client client = new Client();
 
@@ -61,19 +39,41 @@ namespace FFI_TESTS
             Client.client_register(client);
             Assert.IsTrue((MBool)Client.client_login(client));
 
+            //-- tests below --//
+            marshall_chat_frame(client);
+            poll_event(client);
+        }
+
+        void marshall_chat_frame(Client client)
+        {
             //send something
             string text_s = "test";
             Chat.client_chat(client, text_s);
-            System.Threading.Thread.Sleep(100);
 
+            System.Threading.Thread.Sleep(10);
+            
+            string msg = Chat.GetMsg(client, client.GetBase().id); //get our own msg
+
+            Assert.AreEqual(text_s.Length, msg.Length);
+        }
+        
+        void poll_event(Client client)
+        {            
             Events ev = new Events(client);
             Assert.IsTrue(ev.has_event);
             Assert.AreNotEqual(ev.ev[0], 0);
 
-            Assert.AreEqual(ev.GetEvent(),Events.Event.Player);
+            Assert.AreEqual(ev.GetEvent(), Events.Event.Player);
             Assert.AreNotEqual(ev.GetId()[0], 0);
 
-            //FIXME: subsequent requests are still of PLAYER events
+            
+            ev = new Events(client);
+            Assert.IsTrue(ev.has_event);
+            Assert.AreEqual(ev.GetEvent(), Events.Event.Player);
+            
+            ev = new Events(client);
+            Assert.IsTrue(ev.has_event);
+            Assert.AreEqual(ev.GetEvent(), Events.Event.Chat);
         }
     }
 }
