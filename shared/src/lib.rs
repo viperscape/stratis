@@ -1,4 +1,5 @@
 extern crate imgui;
+
 extern crate glium;
 extern crate imgui_glium_renderer;
 extern crate lichen;
@@ -12,3 +13,5 @@ pub mod events;
 pub mod interface;
 
 pub use uuid::Uuid;
+
+pub use imgui::{ImStr,ImString};

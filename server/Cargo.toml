@@ -11,3 +11,5 @@ byteorder = "1"
 postgres = { version = "0.13.5", features = ["with-uuid"]}
 rand = "0.3.15"
 stratis-shared = { path = "../shared" }
+
+imgui = {git = "https://github.com/Gekkio/imgui-rs", version = "0.0.14-pre"}
