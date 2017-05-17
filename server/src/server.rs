@@ -32,9 +32,7 @@ pub struct Server {
 }
 
 impl Server {
-    pub fn new(ip: &str) {
-        let listener = TcpListener::bind(ip).unwrap();
-        
+    pub fn new() -> Server {
         let (dist_tx, mut distributor) = Distributor::new(Store::default());
         thread::spawn(move || distributor.run());
         
@@ -51,10 +49,16 @@ impl Server {
             }
         }
         
+        server
+    }
+
+    pub fn listen(&mut self, ip: &str) {
+        let listener = TcpListener::bind(ip).expect("Unable to listen on interface");
+        
         for s in listener.incoming() {
             match s {
                 Ok(s) => {
-                    let server = server.clone();
+                    let server = self.clone();
                     thread::spawn(|| Server::handler(server,s));
                 },
                 _ => {},
