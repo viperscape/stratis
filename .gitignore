@@ -8,3 +8,5 @@ unity_ffi/.vs/
 unity_ffi/obj/
 unity_ffi/TestResults/
 unity_ffi/UpgradeLog*
+imgui.ini
+client.key
