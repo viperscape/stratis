@@ -4,7 +4,15 @@ use glium::glutin;
 use glium::glutin::{ElementState, Event, MouseButton, MouseScrollDelta, VirtualKeyCode, TouchPhase};
 use imgui::{ImGui, Ui, ImGuiKey};
 use imgui_glium_renderer::Renderer;
-use std::time::Instant;
+
+use std::time::{Duration,Instant};
+use std::thread;
+
+pub const COLOR: (f32, f32, f32, f32) = (0.006, 0.006, 0.006, 1.0);
+pub type ClearColor = (f32, f32, f32, f32);
+
+/// represents 15ms as nanos
+static FPS_60: u32 = 15000000;
 
 pub struct Interface {
     display: GlutinFacade,
@@ -68,14 +76,15 @@ impl Interface {
         self.mouse_wheel = 0.0;
     }
 
-    pub fn render<F: FnMut(&Ui)>(&mut self, clear_color: (f32, f32, f32, f32), mut run_ui: F) -> bool {
+    pub fn render<F: FnMut(&Ui)>(&mut self, clear_color: Option<ClearColor>, mut run_ui: F) -> bool {
         let now = Instant::now();
         let delta = now - self.last_frame;
         let delta_s = delta.as_secs() as f32 + delta.subsec_nanos() as f32 / 1_000_000_000.0;
         self.last_frame = now;
 
         let mut target = self.display.draw();
-        target.clear_color(clear_color.0, clear_color.1, clear_color.2, clear_color.3);
+        let color = clear_color.unwrap_or(COLOR);
+        target.clear_color(color.0, color.1, color.2, color.3);
 
         if let Some(window) = self.display.get_window() {
             match (window.get_inner_size_points(),window.get_inner_size_pixels()) {
@@ -134,4 +143,13 @@ impl Interface {
         }
         true
     }
+
+    pub fn maybe_sleep(&self) {
+        let duration = Duration::new(0,FPS_60);
+        if self.last_frame.elapsed() < duration {
+            let delay = duration - self.last_frame.elapsed();
+            thread::sleep(delay);
+        }
+    }
+
 }

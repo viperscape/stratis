@@ -2,16 +2,14 @@ extern crate stratis_shared as shared;
 
 use shared::client::{Client};
 use shared::events::Event;
+use shared::interface::Interface;
 
-use std::io;
 use std::sync::{Arc, Mutex};
 use std::sync::mpsc::Receiver;
 
 
 #[allow(unused_must_use)]
-fn main() {
-    let mut input = String::new();
-    
+fn main() {    
     let ip_addr = "127.0.0.1:9996";
     
     let client;
@@ -33,37 +31,13 @@ fn main() {
     }
 
     Client::handler(client.clone());
+
+    let mut ifc = Interface::init("stratis client", [800,600]);
     
-    let mut chat = true;
-    loop {
-        input.clear();
-        let mut client = client.lock().unwrap();
-        
-        if let Ok(_) = io::stdin().read_line(&mut input) {
-            let cmd = input.trim();
-            match cmd {
-                "comm" => { chat = !chat; println!("comm online:{:?}",chat); }
-                _ => {
-                    if chat { client.chat(&input) }
-                    else {
-                        match cmd {
-                            "exit" => { break },
-                            "ev" => {
-                                if let Ok(e) = rx.try_recv() {
-                                    println!("event:{:?}",e);
-                                }
-                            },
-                            _ => {
-                                let cmds: Vec<&str> = cmd.split(' ').collect();
-                                if cmds[0] == "nick" {
-                                    println!("nick:{:?}",cmds[1]);
-                                    client.nick(cmds[1]);
-                                }
-                            }
-                        }
-                    }
-                },
-            }            
-        }
+    'main: loop {
+        if !ifc.render(None, |_ui| {
+            //ui.show_test_window(&mut true) // NOTE: use for imgui examples
+        }) { break 'main }
+        else { ifc.maybe_sleep() }
     }
 }
