@@ -1,7 +1,6 @@
-extern crate stratis;
 extern crate stratis_shared as shared;
 
-use stratis::{Client};
+use shared::client::{Client};
 use shared::events::Event;
 
 use std::io;

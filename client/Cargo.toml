@@ -1,0 +1,8 @@
+[package]
+name = "stratis-client"
+version = "0.1.0"
+authors = ["viperscape <chrisfgill@gmail.com>"]
+license = "Apache-2.0"
+
+[dependencies]
+stratis-shared = { path = "../shared" }

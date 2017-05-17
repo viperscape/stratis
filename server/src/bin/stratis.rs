@@ -1,6 +1,6 @@
-extern crate stratis;
+extern crate stratis_server as server;
 
-use stratis::{Server};
+use server::{Server};
 
 #[allow(unused_must_use)]
 fn main() {
