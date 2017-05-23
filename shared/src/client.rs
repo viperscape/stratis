@@ -9,7 +9,7 @@ use std::io::prelude::*;
 use std::net::Shutdown;
 use std::fs::File;
 use std::net::TcpStream;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use std::thread;
 use std::sync::{Arc, Mutex};
@@ -34,8 +34,8 @@ pub struct Client {
     pub base: ClientBase,
     pub stream: Option<TcpStream>,
     
-    pub player_cache: HashMap<Uuid,Player>,
-    pub msg_cache: HashMap<Uuid,Vec<String>>, //NOTE: 'events' orders of these messages
+    pub player_cache: BTreeMap<Uuid,Player>,
+    pub msg_cache: BTreeMap<Uuid,Vec<String>>, //NOTE: 'events' orders of these messages
     
     pub ping_start: Instant,
     pub ping_delta: f32,
@@ -51,8 +51,8 @@ impl Client {
         (Client { base: ClientBase { key:From::from(&key[..]),
                                      id:uuid, },
                   stream: None,
-                  player_cache: HashMap::new(),
-                  msg_cache: HashMap::new(),
+                  player_cache: BTreeMap::new(),
+                  msg_cache: BTreeMap::new(),
                   
                   ping_start: Instant::now(),
                   ping_delta: 0.0,
