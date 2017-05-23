@@ -20,21 +20,13 @@ fn main() {
     // load in client and connect to server
     let client;
     let rx: Receiver<Event>;
-    if let Some((mut c, rx_)) = Client::load_file("client.key") { //assumes client key is an admin user
+    if let Some((mut c, rx_)) = Client::load_file("admin.key") { //assumes client key is an admin user
         c.connect(ip_addr);
         client = Arc::new(Mutex::new(c));
         rx = rx_;
         Client::login(&client);
     }
-    else {
-        let (mut c, rx_) = Client::default();
-        Client::save(&c,"client.key");
-        c.connect(ip_addr);
-        c.register();
-        client = Arc::new(Mutex::new(c));
-        rx = rx_;
-        Client::login(&client);
-    }
+    else { panic!("Cannot find login key") }
     
     
     let mut ifc = Interface::init("stratis console", [800,600]);
