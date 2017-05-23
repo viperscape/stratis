@@ -9,3 +9,4 @@ uuid = { version = "^0.3", features = ["v4"]}
 postgres = { version = "0.13.5", features = ["with-uuid"]}
 getopts = "0.2.14"
 notify = "4.0.0"
+stratis-shared = { path = "../shared" }

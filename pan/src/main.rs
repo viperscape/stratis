@@ -3,6 +3,7 @@ use getopts::Options;
 use std::env;
 
 mod postgres;
+mod admin;
 mod lifecycle;
 
 fn main() {
@@ -22,6 +23,8 @@ fn main() {
     opts.optflag("d", "debug", "Specify debug stratis build");
 
     opts.optflag("r",  "run", "Run server immediately");
+
+    opts.optflag("c", "create", "Create admin user");
     
     
     let matches = match opts.parse(&args[1..]) {
@@ -30,5 +33,6 @@ fn main() {
     };
 
     postgres::build(&matches);
+    admin::create(&matches);
     lifecycle::watcher(&matches);
 }
