@@ -10,7 +10,6 @@ use shared::interface::Interface;
 
 use imgui::{Ui,ImString,ImStr};
 
-use std::thread;
 use std::sync::mpsc::{Receiver};
 use std::sync::{Arc, Mutex};
 
@@ -36,11 +35,6 @@ fn main() {
         rx = rx_;
         Client::login(&client);
     }
-
-    let handler = client.clone();
-    thread::spawn(move || {
-        Client::handler(handler); // TODO: match server handler call syntax
-    });
     
     
     let mut ifc = Interface::init("stratis console", [800,600]);
