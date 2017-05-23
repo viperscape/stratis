@@ -59,6 +59,14 @@ pub fn watcher (matches: &getopts::Matches) {
                 spawn_handle = spawn(&server_dest);
             }
     }
+
+    if spawn_handle.is_none() {
+        let path = path::PathBuf::from(server_path.clone()+"stratis.exe");
+        let r = fs::copy(&path,&server_dest);
+        spawn_handle = spawn(&server_dest);
+
+        println!("Missing build, re-copying {:?} & respawning {:?}",r, spawn_handle.is_some());
+    }
     
     for n in rx.iter() {
         let mut new_spawn_handle = None;
