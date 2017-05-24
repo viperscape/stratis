@@ -5,11 +5,11 @@ authors = ["viperscape <chrisfgill@gmail.com>"]
 license = "Apache-2.0"
 
 [features]
-default = ["imgui"]
+interface = ["imgui","stratis-shared/interface"]
 
 [[bin]]
 name = "console"
-required-features = ["default"]
+required-features = ["interface"]
 
 [[bin]]
 name = "stratis"
@@ -20,7 +20,7 @@ uuid = { version = "^0.3", features = ["v4"]}
 byteorder = "1"
 postgres = { version = "0.13", features = ["with-uuid"]}
 rand = "0.3.15"
-stratis-shared = { path = "../shared" }
+stratis-shared = { path = "../shared"}
 
 imgui = { optional = true, git = "https://github.com/Gekkio/imgui-rs", version = "0.0.14-pre"}
 
