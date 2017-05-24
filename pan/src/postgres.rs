@@ -1,8 +1,7 @@
 extern crate getopts;
-
 extern crate postgres;
 use self::postgres::{Connection, TlsMode};
-
+use self::postgres::types::ToSql;
 
 pub fn build (matches: &getopts::Matches) {
     if matches.opt_present("i") {
@@ -52,7 +51,7 @@ pub fn build (matches: &getopts::Matches) {
 
 }
 
-pub fn create_admin(id: &Uuid) {
+pub fn sql_exec(matches: &getopts::Matches,  query: &str, params: &[&ToSql]) -> Result<u64, postgres::error::Error> {
     let user = matches.opt_str("u").unwrap_or("postgres".to_owned());
     let pass = matches.opt_str("p").expect("need password, use -p opt");
     
@@ -62,6 +61,6 @@ pub fn create_admin(id: &Uuid) {
     let conn = Connection::connect(s,
                                    TlsMode::None).expect("cannot connect to sql");
 
-    let r = conn.execute("update clients set is_admin = true where UUID = $1;", &[id]);
-    println!("Admin created {:?}", r);
+    let r = conn.execute(query, params);
+    r
 }
