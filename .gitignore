@@ -11,3 +11,4 @@ unity_ffi/UpgradeLog*
 imgui.ini
 client.key
 admin.key
+cargo.lock
