@@ -1,20 +1,16 @@
 use shared::client::Client;
-use server::Store;
+use server::{Store,DataStore};
 use getopts;
 
 use db::sql_exec;
 
 pub fn create (matches: &getopts::Matches) {
     if matches.opt_present("c") {
-        let ip_addr = "127.0.0.1:9996";
+        let (c, _) = Client::default();
+        let store = Store::default();
+        store.client_put(&c.base);
         
-        let (mut c, _) = Client::default();
-        c.connect(ip_addr);
-        if c.stream.is_none() { panic!("Client unable to connect to server") }
-        c.register();
-
-        
-        let r = sql_exec(matches, "Update Clients set is_admin = true where UUID = $1;", &[&c.id()]);
+        let r = sql_exec(matches, "update clients set is_admin = true where UUID = $1;", &[&c.id()]);
         if r.is_err() {
             panic!("Unable to set user as admin {:?}", r)
         }
