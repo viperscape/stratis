@@ -8,3 +8,4 @@ mod store;
 
 pub use server::Server;
 pub use shared::client::Client;
+pub use store::Store;
