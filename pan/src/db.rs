@@ -1,7 +1,7 @@
-extern crate getopts;
-extern crate postgres;
-
-use self::postgres::{Connection, TlsMode};
+use postgres::{Connection, TlsMode};
+use postgres::types::ToSql;
+use postgres::error as sqlerr;
+use getopts;
 
 pub fn build (matches: &getopts::Matches) {
     if matches.opt_present("i") {
@@ -51,7 +51,7 @@ pub fn build (matches: &getopts::Matches) {
 
 }
 
-pub fn sql_exec(matches: &getopts::Matches,  query: &str, params: &[&ToSql]) -> Result<u64, postgres::error::Error> {
+pub fn sql_exec(matches: &getopts::Matches,  query: &str, params: &[&ToSql]) -> Result<u64, sqlerr::Error> {
     let user = matches.opt_str("u").unwrap_or("postgres".to_owned());
     let pass = matches.opt_str("p").expect("need password, use -p opt");
     

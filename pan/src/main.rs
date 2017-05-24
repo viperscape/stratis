@@ -1,8 +1,12 @@
 extern crate getopts;
+extern crate postgres;
+extern crate stratis_shared as shared;
+extern crate stratis_server as server;
+
 use getopts::Options;
 use std::env;
 
-mod postgres;
+mod db;
 mod admin;
 mod lifecycle;
 
@@ -32,7 +36,7 @@ fn main() {
         Err(f) => { panic!(f.to_string()) }
     };
 
-    postgres::build(&matches);
+    db::build(&matches);
     admin::create(&matches);
     lifecycle::watcher(&matches);
 }
