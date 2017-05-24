@@ -1,6 +1,8 @@
 extern crate getopts;
 extern crate stratis_shared as shared;
-extern crate stratis_server as server;
+
+//#[cfg(feature = "sql")]
+//extern crate stratis_server as server;
 
 use self::shared::client::Client;
 use self::server::Store;
@@ -15,10 +17,10 @@ pub fn create (matches: &getopts::Matches) {
         c.register();
 
         
-        let r = sql_exec(matches, "Update Clients set is_admin = true where UUID = '$1';", &[&c.id().to_string()]);
-        if r.is_err() {
-            panic!("Unable to set user as admin {:?}", r)
-        }
+        //let r = sql_exec(matches, "Update Clients set is_admin = true where UUID = '$1';", &[&c.id().to_string()]);
+        //if r.is_err() {
+        //    panic!("Unable to set user as admin {:?}", r)
+        //}
 
         Client::save(&c,"admin.key");
     }

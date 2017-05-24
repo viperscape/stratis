@@ -1,3 +1,5 @@
+extern crate postgres;
+extern crate uuid;
 extern crate stratis_shared as shared;
 
 mod server;

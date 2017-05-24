@@ -1,7 +1,7 @@
 extern crate getopts;
 extern crate postgres;
+
 use self::postgres::{Connection, TlsMode};
-use self::postgres::types::ToSql;
 
 pub fn build (matches: &getopts::Matches) {
     if matches.opt_present("i") {

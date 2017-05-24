@@ -1,8 +1,5 @@
-extern crate postgres;
-extern crate uuid;
-
-use self::postgres::{Connection, TlsMode};
-use self::uuid::Uuid;
+use postgres::{Connection, TlsMode};
+use uuid::Uuid;
 
 use shared::client::{ClientBase};
 use shared::player::Player;
