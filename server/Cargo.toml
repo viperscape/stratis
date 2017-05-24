@@ -8,7 +8,7 @@ license = "Apache-2.0"
 hmac-sha1 = "^0.1"
 uuid = { version = "^0.3", features = ["v4"]}
 byteorder = "1"
-postgres = { version = "0.13.5", features = ["with-uuid"]}
+postgres = { version = "0.14", features = ["with-uuid"]}
 rand = "0.3.15"
 stratis-shared = { path = "../shared" }
 

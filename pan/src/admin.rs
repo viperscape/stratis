@@ -1,8 +1,9 @@
 extern crate getopts;
 extern crate stratis_shared as shared;
+extern crate stratis_server as server;
 
 use self::shared::client::Client;
-use ::postgres::sql_exec;
+use self::server::Store;
 
 pub fn create (matches: &getopts::Matches) {
     if matches.opt_present("c") {
