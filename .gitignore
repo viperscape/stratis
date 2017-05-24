@@ -10,3 +10,4 @@ unity_ffi/TestResults/
 unity_ffi/UpgradeLog*
 imgui.ini
 client.key
+admin.key
