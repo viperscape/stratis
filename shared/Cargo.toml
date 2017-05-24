@@ -4,13 +4,17 @@ version = "0.1.0"
 authors = ["viperscape <chrisfgill@gmail.com>"]
 license = "Apache-2.0"
 
+[features]
+interface = ["imgui","glium","imgui-glium-renderer"]
+
 [dependencies]
 hmac-sha1 = "^0.1"
 uuid = { version = "^0.3", features = ["v4"]}
 byteorder = "1"
 rand = "0.3.15"
 
-imgui = {git = "https://github.com/Gekkio/imgui-rs", version = "0.0.14-pre"}
-glium = { version = "0.16", default-features = true }
-imgui-glium-renderer =  {git = "https://github.com/Gekkio/imgui-rs", version = "0.0.14-pre"}
+imgui = { optional = true, git = "https://github.com/Gekkio/imgui-rs", version = "0.0.14-pre"}
+glium = { optional = true, version = "0.16", default-features = true }
+imgui-glium-renderer =  { optional = true, git = "https://github.com/Gekkio/imgui-rs", version = "0.0.14-pre" }
+
 lichen = "0.2"
