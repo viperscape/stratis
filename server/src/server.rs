@@ -9,11 +9,10 @@ use std::time::{Instant,Duration};
 use std::io::prelude::*;
 
 extern crate hmacsha1;
-extern crate uuid;
 extern crate byteorder;
 
 use shared::{chat,client,opcode,player};
-use self::uuid::Uuid;
+use uuid::Uuid;
 
 
 use self::client::{Client,ClientBase};
@@ -72,7 +71,7 @@ impl Server {
         let mut time = Instant::now(); //TODO: ping every so often
                 
         //new conn needs auth code
-        let m = uuid::Uuid::new_v4();
+        let m = Uuid::new_v4();
         s.write_all(m.as_bytes());
 
         let mut client_id: Option<Uuid> = None;

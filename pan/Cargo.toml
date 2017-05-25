@@ -5,9 +5,9 @@ authors = ["viperscape <chrisfgill@gmail.com>"]
 license = "Apache-2.0"
 
 [dependencies]
-uuid = { version = "^0.3", features = ["v4"]}
+uuid = { version = "0.4", features = ["v4"]}
 getopts = "0.2.14"
 notify = "4.0.0"
-postgres = { version = "0.13", features = ["with-uuid"]}
+postgres = { version = "0.14", features = ["with-uuid"]}
 stratis-server = { path = "../server" }
 stratis-shared = { path = "../shared" }
