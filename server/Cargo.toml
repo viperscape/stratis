@@ -16,9 +16,9 @@ name = "stratis"
 
 [dependencies]
 hmac-sha1 = "^0.1"
-uuid = { version = "0.4", features = ["v4"]}
+uuid = { version = "0.5", features = ["v4"]}
 byteorder = "1"
-postgres = { version = "0.14", features = ["with-uuid"]}
+postgres = { version = "0.14.1", features = ["with-uuid"]}
 rand = "0.3.15"
 stratis-shared = { path = "../shared"}
 
